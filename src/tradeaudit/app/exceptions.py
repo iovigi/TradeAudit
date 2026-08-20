@@ -36,6 +36,30 @@ class DatabaseInitializationError(TradeAuditError):
         super().__init__(message, code="DB_INIT_ERROR")
 
 
+class MT5Error(TradeAuditError):
+    """Base exception for MetaTrader 5 operations."""
+    def __init__(self, message: str, code: str = "MT5_ERROR"):
+        super().__init__(message, code=code)
+
+
+class MT5ConnectionError(MT5Error):
+    """Raised when connecting to MT5 terminal fails."""
+    def __init__(self, message: str):
+        super().__init__(message, code="MT5_CONNECTION_ERROR")
+
+
+class MT5AuthError(MT5Error):
+    """Raised when MT5 login or password authentication fails."""
+    def __init__(self, message: str):
+        super().__init__(message, code="MT5_AUTH_ERROR")
+
+
+class CredentialStoreError(TradeAuditError):
+    """Raised when secure credential storage fails."""
+    def __init__(self, message: str):
+        super().__init__(message, code="CREDENTIAL_STORE_ERROR")
+
+
 def handle_uncaught_exception(
     exc_type: Type[BaseException],
     exc_value: BaseException,

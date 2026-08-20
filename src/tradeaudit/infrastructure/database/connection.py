@@ -73,6 +73,22 @@ class DatabaseManager:
         finally:
             session.close()
 
+    def session_scope(self):
+        """Context manager for DB session handling."""
+        from contextlib import contextmanager
+        @contextmanager
+        def _scope():
+            session = self.SessionLocal()
+            try:
+                yield session
+                session.commit()
+            except Exception:
+                session.rollback()
+                raise
+            finally:
+                session.close()
+        return _scope()
+
     def close(self) -> None:
         """Dispose database engine connections to release file locks."""
         if hasattr(self, "engine") and self.engine:
