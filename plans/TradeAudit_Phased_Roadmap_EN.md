@@ -225,13 +225,14 @@ Refresh UI
 
 ## Definition of Done
 
-- [ ] historical MT5 data can be imported;
-- [ ] duplicate records are prevented;
-- [ ] trades are grouped correctly;
-- [ ] partial closes are supported;
-- [ ] open and close times are correct;
-- [ ] BUY/SELL direction is correct;
-- [ ] imported trades persist between application sessions.
+- [x] historical MT5 data can be imported;
+- [x] duplicate records are prevented;
+- [x] trades are grouped correctly;
+- [x] partial closes are supported;
+- [x] open and close times are correct;
+- [x] BUY/SELL direction is correct;
+- [x] imported trades persist between application sessions.
+
 
 ---
 

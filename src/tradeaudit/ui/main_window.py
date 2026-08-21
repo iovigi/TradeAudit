@@ -23,10 +23,13 @@ from tradeaudit.domain.models import MT5Settings
 from tradeaudit.infrastructure.database.connection import DatabaseManager
 from tradeaudit.infrastructure.security.credential_store import CredentialStore
 from tradeaudit.infrastructure.repositories.settings_repository import SettingsRepository
+from tradeaudit.infrastructure.repositories.trade_repository import TradeRepository
+from tradeaudit.app.services.sync_service import SyncService
 from tradeaudit.infrastructure.mt5.connection_service import MT5ConnectionService, ConnectionState
 from tradeaudit.ui.widgets.connection_status_badge import ConnectionStatusBadge
 from tradeaudit.ui.widgets.account_info_card import AccountInfoCard
 from tradeaudit.ui.views.settings_view import SettingsView
+from tradeaudit.ui.views.trades_view import TradesView
 from tradeaudit.app.exceptions import MT5Error, CredentialStoreError
 
 logger = logging.getLogger("tradeaudit.ui.main_window")
@@ -41,7 +44,9 @@ class MainWindow(QMainWindow):
         db_manager: DatabaseManager,
         mt5_service: Optional[MT5ConnectionService] = None,
         credential_store: Optional[CredentialStore] = None,
-        settings_repo: Optional[SettingsRepository] = None
+        settings_repo: Optional[SettingsRepository] = None,
+        trade_repo: Optional[TradeRepository] = None,
+        sync_service: Optional[SyncService] = None
     ):
         super().__init__()
         self.settings = settings
@@ -51,6 +56,8 @@ class MainWindow(QMainWindow):
         self.mt5_service = mt5_service or MT5ConnectionService()
         self.credential_store = credential_store or CredentialStore()
         self.settings_repo = settings_repo or SettingsRepository(self.db_manager)
+        self.trade_repo = trade_repo or TradeRepository(self.db_manager)
+        self.sync_service = sync_service or SyncService(trade_repo=self.trade_repo)
 
         self.setWindowTitle(f"{self.settings.app_name} v{self.settings.app_version}")
         self.resize(1100, 750)
@@ -60,8 +67,10 @@ class MainWindow(QMainWindow):
         self._init_ui()
         self._init_status_bar()
         self._load_saved_configuration()
+        self._refresh_trades()
 
-        logger.info("MainWindow initialized with MT5 & Settings services.")
+        logger.info("MainWindow initialized with MT5, Settings & Trade Sync services.")
+
 
     def _apply_dark_theme(self) -> None:
         """Apply modern dark color palette."""
@@ -160,17 +169,23 @@ class MainWindow(QMainWindow):
         dash_layout.addWidget(self.account_card)
         dash_layout.addStretch()
 
-        # Tab 2: Settings View
+        # Tab 2: Trades View
+        self.trades_view = TradesView()
+        self.trades_view.sync_requested.connect(self._on_sync_requested)
+
+        # Tab 3: Settings View
         self.settings_view = SettingsView()
         self.settings_view.settings_saved.connect(self._on_settings_saved)
         self.settings_view.connect_requested.connect(self._on_connect_requested)
         self.settings_view.disconnect_requested.connect(self._on_disconnect_requested)
 
         self.tab_widget.addTab(self.dashboard_tab, "📈 Dashboard")
+        self.tab_widget.addTab(self.trades_view, "📊 Trades")
         self.tab_widget.addTab(self.settings_view, "⚙️ MT5 Settings")
 
         layout.addWidget(header_card)
         layout.addWidget(self.tab_widget, stretch=1)
+
 
     def _init_status_bar(self) -> None:
         """Configure system status bar."""
@@ -246,7 +261,9 @@ class MainWindow(QMainWindow):
             self.settings_view.show_feedback(
                 f"✅ Connected to MT5! Account: {account_info.login} ({account_info.name}) | Balance: {account_info.balance:.2f} {account_info.currency}"
             )
+            self._refresh_trades()
             self.status_bar.showMessage(f"🟢 Connected to MT5 Account {account_info.login}.", 5000)
+
         except MT5Error as e:
             self.status_badge.set_status(ConnectionState.ERROR)
             self.account_card.update_account_info(None)
@@ -265,3 +282,36 @@ class MainWindow(QMainWindow):
         self.account_card.update_account_info(None)
         self.settings_view.show_feedback("🔌 Disconnected from MT5 terminal.")
         self.status_bar.showMessage("MT5 disconnected.", 4000)
+
+    def _refresh_trades(self) -> None:
+        """Fetch stored trades from DB and update TradesView."""
+        saved_settings = self.settings_repo.load_mt5_settings()
+        if saved_settings and saved_settings.login:
+            trades = self.trade_repo.get_trades(saved_settings.login)
+            last_sync = self.trade_repo.get_last_sync_time(saved_settings.login)
+            self.trades_view.set_trades(trades, last_sync=last_sync)
+
+    def _on_sync_requested(self) -> None:
+        """Handle sync history action from TradesView toolbar."""
+        saved_settings = self.settings_repo.load_mt5_settings()
+        if not saved_settings or not saved_settings.login:
+            self.status_bar.showMessage("⚠️ Please configure MT5 account settings first.", 5000)
+            return
+
+        account_info = None
+        if self.mt5_service.is_connected():
+            try:
+                account_info = self.mt5_service.get_account_info()
+            except Exception:
+                pass
+
+        self.status_bar.showMessage(f"Syncing MT5 history for account {saved_settings.login}...", 0)
+        res = self.sync_service.sync_account_history(account_id=saved_settings.login, account_info=account_info)
+
+        self._refresh_trades()
+
+        if res.success:
+            self.status_bar.showMessage(f"✅ {res.message}", 6000)
+        else:
+            self.status_bar.showMessage(f"❌ Sync failed: {res.message}", 7000)
+
