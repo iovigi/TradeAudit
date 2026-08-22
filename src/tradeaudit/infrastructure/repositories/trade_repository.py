@@ -132,6 +132,14 @@ class TradeRepository:
                 trade_model.commission = trade.commission
                 trade_model.fee = trade.fee
                 trade_model.status = trade.status
+                trade_model.price_risk = trade.price_risk
+                trade_model.planned_reward = trade.planned_reward
+                trade_model.planned_rr = trade.planned_rr
+                trade_model.monetary_risk = trade.monetary_risk
+                trade_model.realized_r = trade.realized_r
+                trade_model.risk_percentage = trade.risk_percentage
+                trade_model.is_valid_setup = trade.is_valid_setup
+                trade_model.validation_error = trade.validation_error
 
                 session.flush()  # Ensures trade_model.id is populated
 
@@ -203,6 +211,14 @@ class TradeRepository:
                     commission=tm.commission,
                     fee=tm.fee,
                     status=tm.status,
+                    price_risk=tm.price_risk,
+                    planned_reward=tm.planned_reward,
+                    planned_rr=tm.planned_rr,
+                    monetary_risk=tm.monetary_risk,
+                    realized_r=tm.realized_r,
+                    risk_percentage=tm.risk_percentage,
+                    is_valid_setup=tm.is_valid_setup,
+                    validation_error=tm.validation_error,
                     deals=deals
                 )
                 result_trades.append(trade)

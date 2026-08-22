@@ -4,11 +4,14 @@ Trade aggregator service to group raw MT5 deals into logical Trade entities.
 
 import logging
 from collections import defaultdict
-from typing import List, Dict
+from typing import List, Dict, Optional
 from datetime import datetime
 
 from tradeaudit.domain.models import TradeDeal, Trade
 from tradeaudit.app.services.trade_normalizer import TradeNormalizer
+from tradeaudit.app.services.trade_validator import TradeValidator
+from tradeaudit.app.services.risk_calculator import RiskCalculator
+from tradeaudit.app.services.rmultiple_calculator import RMultipleCalculator
 
 logger = logging.getLogger("tradeaudit.app.services.trade_aggregator")
 
@@ -16,11 +19,42 @@ logger = logging.getLogger("tradeaudit.app.services.trade_aggregator")
 class TradeAggregator:
     """Aggregates raw deal execution records into logical Trade entities by position ID."""
 
-    def aggregate_deals(self, deals: List[TradeDeal]) -> List[Trade]:
+    @staticmethod
+    def enrich_trade_metrics(trade: Trade, account_balance: Optional[float] = None) -> Trade:
+        """Calculate and populate risk, planned R:R, monetary risk, realized R, and setup validation."""
+        # 1. Validate setup
+        is_valid, error = TradeValidator.validate_trade(trade)
+
+        # 2. Risk calculations
+        trade.price_risk = RiskCalculator.calculate_price_risk(
+            trade.direction, trade.open_price, trade.initial_sl
+        )
+        trade.planned_reward = RiskCalculator.calculate_planned_reward(
+            trade.direction, trade.open_price, trade.initial_tp
+        )
+        trade.monetary_risk = RiskCalculator.calculate_monetary_risk(
+            trade, account_balance=account_balance
+        )
+        trade.risk_percentage = RiskCalculator.calculate_risk_percentage(
+            trade.monetary_risk, account_balance
+        )
+
+        # 3. R-Multiple calculations
+        trade.planned_rr = RMultipleCalculator.calculate_planned_rr(
+            trade.price_risk, trade.planned_reward
+        )
+        trade.realized_r = RMultipleCalculator.calculate_realized_r(
+            trade.net_profit, trade.monetary_risk
+        )
+
+        return trade
+
+    def aggregate_deals(self, deals: List[TradeDeal], account_balance: Optional[float] = None) -> List[Trade]:
         """
         Group deals by position_id and convert them into logical domain Trade entities.
 
         :param deals: List of TradeDeal objects.
+        :param account_balance: Optional current account balance for risk % calculation.
         :return: List of aggregated Trade domain objects.
         """
         normalized_deals = TradeNormalizer.normalize_deals(deals)
@@ -104,6 +138,10 @@ class TradeAggregator:
                 status=status,
                 deals=sorted_deals
             )
+
+            # Populate risk and R-multiple metrics
+            self.enrich_trade_metrics(trade, account_balance=account_balance)
+
             aggregated_trades.append(trade)
 
         # Sort aggregated trades by open_time descending for UI presentation

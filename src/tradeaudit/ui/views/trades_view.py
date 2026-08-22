@@ -39,10 +39,13 @@ class TradesTableModel(QAbstractTableModel):
         "Volume",
         "Open Time",
         "Open Price",
-        "Close Time",
         "Close Price",
         "Initial SL",
         "Initial TP",
+        "Planned R:R",
+        "Risk ($)",
+        "Risk %",
+        "Realized R",
         "Net Profit",
         "Status"
     ]
@@ -95,35 +98,59 @@ class TradesTableModel(QAbstractTableModel):
             elif col == 5:
                 return f"{trade.open_price:.5f}"
             elif col == 6:
-                return trade.close_time.strftime("%Y-%m-%d %H:%M:%S") if trade.close_time else "—"
-            elif col == 7:
                 return f"{trade.close_price:.5f}" if trade.close_price is not None else "—"
-            elif col == 8:
+            elif col == 7:
                 return f"{trade.initial_sl:.5f}" if trade.initial_sl is not None else "—"
-            elif col == 9:
+            elif col == 8:
                 return f"{trade.initial_tp:.5f}" if trade.initial_tp is not None else "—"
+            elif col == 9:
+                return f"1:{trade.planned_rr:.2f}" if trade.planned_rr is not None else "—"
             elif col == 10:
-                return f"{trade.net_profit:+.2f}"
+                return f"${trade.monetary_risk:.2f}" if trade.monetary_risk is not None else "—"
             elif col == 11:
-                return trade.status
+                return f"{trade.risk_percentage:.2f}%" if trade.risk_percentage is not None else "—"
+            elif col == 12:
+                return f"{trade.realized_r:+.2f} R" if trade.realized_r is not None else "UNKNOWN"
+            elif col == 13:
+                return f"{trade.net_profit:+.2f}"
+            elif col == 14:
+                return trade.status if trade.is_valid_setup else f"{trade.status} (⚠️ Invalid Setup)"
+
+        elif role == Qt.ToolTipRole:
+            if not trade.is_valid_setup and trade.validation_error:
+                return f"Validation Alert: {trade.validation_error}"
+            if trade.initial_sl is None:
+                return "Warning: No initial Stop Loss defined. Realized R is UNKNOWN."
 
         elif role == Qt.ForegroundRole:
             if col == 2:  # Type BUY/SELL
-                return QBrush(QColor("#00e676") if trade.direction == "BUY" else QBrush(QColor("#ff5252")))
-            elif col == 10:  # Net Profit
+                return QBrush(QColor("#00e676") if trade.direction == "BUY" else QColor("#ff5252"))
+            elif col == 12:  # Realized R
+                if trade.realized_r is not None:
+                    if trade.realized_r > 0:
+                        return QBrush(QColor("#00e676"))
+                    elif trade.realized_r < 0:
+                        return QBrush(QColor("#ff5252"))
+                    else:
+                        return QBrush(QColor("#a0aec0"))
+                else:
+                    return QBrush(QColor("#ffb74d"))  # Warning gold for UNKNOWN
+            elif col == 13:  # Net Profit
                 if trade.net_profit > 0:
                     return QBrush(QColor("#00e676"))
                 elif trade.net_profit < 0:
                     return QBrush(QColor("#ff5252"))
                 else:
                     return QBrush(QColor("#a0aec0"))
-            elif col == 11:  # Status
+            elif col == 14:  # Status
+                if not trade.is_valid_setup:
+                    return QBrush(QColor("#ff5252"))
                 return QBrush(QColor("#00b0ff") if trade.status == "OPEN" else QBrush(QColor("#8b9bb4")))
 
         elif role == Qt.TextAlignmentRole:
-            if col in (3, 5, 7, 8, 9, 10):
+            if col in (3, 5, 6, 7, 8, 9, 10, 11, 12, 13):
                 return int(Qt.AlignRight | Qt.AlignVCenter)
-            elif col in (0, 1, 2, 11):
+            elif col in (0, 1, 2, 14):
                 return int(Qt.AlignCenter | Qt.AlignVCenter)
             return int(Qt.AlignLeft | Qt.AlignVCenter)
 

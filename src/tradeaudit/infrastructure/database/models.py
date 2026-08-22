@@ -3,7 +3,7 @@ Base declarative model and foundational database entities.
 """
 
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, Index, Boolean
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -67,6 +67,14 @@ class TradeModel(Base):
     commission = Column(Float, nullable=False, default=0.0)
     fee = Column(Float, nullable=False, default=0.0)
     status = Column(String(20), nullable=False, default="OPEN", index=True)  # OPEN or CLOSED
+    price_risk = Column(Float, nullable=True)
+    planned_reward = Column(Float, nullable=True)
+    planned_rr = Column(Float, nullable=True)
+    monetary_risk = Column(Float, nullable=True)
+    realized_r = Column(Float, nullable=True)
+    risk_percentage = Column(Float, nullable=True)
+    is_valid_setup = Column(Boolean, default=True, nullable=False)
+    validation_error = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 

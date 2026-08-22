@@ -77,6 +77,14 @@ class Trade:
     commission: float = 0.0    # Total commission
     fee: float = 0.0           # Total fee
     status: str = "OPEN"       # OPEN, CLOSED
+    price_risk: Optional[float] = None
+    planned_reward: Optional[float] = None
+    planned_rr: Optional[float] = None
+    monetary_risk: Optional[float] = None
+    realized_r: Optional[float] = None
+    risk_percentage: Optional[float] = None
+    is_valid_setup: bool = True
+    validation_error: Optional[str] = None
     deals: List[TradeDeal] = field(default_factory=list)
 
     @property

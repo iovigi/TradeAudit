@@ -35,7 +35,7 @@ def test_trades_table_model(qtbot):
 
     model = TradesTableModel([trade])
     assert model.rowCount() == 1
-    assert model.columnCount() == 12
+    assert model.columnCount() == 15
 
     # Column 0: Position ID
     assert model.data(model.index(0, 0), Qt.DisplayRole) == "50"
@@ -43,8 +43,10 @@ def test_trades_table_model(qtbot):
     assert model.data(model.index(0, 1), Qt.DisplayRole) == "EURUSD"
     # Column 2: Type
     assert model.data(model.index(0, 2), Qt.DisplayRole) == "BUY"
-    # Column 10: Profit
-    assert model.data(model.index(0, 10), Qt.DisplayRole) == "+500.00"
+    # Column 12: Realized R (None -> UNKNOWN)
+    assert model.data(model.index(0, 12), Qt.DisplayRole) == "UNKNOWN"
+    # Column 13: Net Profit
+    assert model.data(model.index(0, 13), Qt.DisplayRole) == "+500.00"
 
 
 def test_trades_view_instantiation_and_filtering(qtbot):

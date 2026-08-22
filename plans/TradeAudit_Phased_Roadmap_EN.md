@@ -318,15 +318,15 @@ not an invented value.
 
 ## Definition of Done
 
-- [ ] BUY risk calculation works;
-- [ ] SELL risk calculation works;
-- [ ] monetary risk works;
-- [ ] risk percentage works;
-- [ ] planned R:R works;
-- [ ] realized R works;
-- [ ] missing SL is handled;
-- [ ] invalid SL/TP direction is detected;
-- [ ] unit tests cover calculations.
+- [x] BUY risk calculation works;
+- [x] SELL risk calculation works;
+- [x] monetary risk works;
+- [x] risk percentage works;
+- [x] planned R:R works;
+- [x] realized R works;
+- [x] missing SL is handled;
+- [x] invalid SL/TP direction is detected;
+- [x] unit tests cover calculations.
 
 ---
 
