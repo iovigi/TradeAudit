@@ -412,12 +412,12 @@ Configurable later.
 
 ## Definition of Done
 
-- [ ] all core metrics are calculated;
-- [ ] drawdown curve is correct;
-- [ ] losing streak is correct;
-- [ ] insufficient sample warnings work;
-- [ ] metrics are covered by unit tests;
-- [ ] results can be reproduced from the same dataset.
+- [x] all core metrics are calculated;
+- [x] drawdown curve is correct;
+- [x] losing streak is correct;
+- [x] insufficient sample warnings work;
+- [x] metrics are covered by unit tests;
+- [x] results can be reproduced from the same dataset.
 
 ---
 
