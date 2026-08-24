@@ -495,12 +495,12 @@ Average Risk %
 
 ## Definition of Done
 
-- [ ] date filters work;
-- [ ] BUY/SELL/ALL works;
-- [ ] symbol multi-select works;
-- [ ] all-symbol mode works;
-- [ ] dashboard recalculates automatically;
-- [ ] charts respect active filters.
+- [x] date filters work;
+- [x] BUY/SELL/ALL works;
+- [x] symbol multi-select works;
+- [x] all-symbol mode works;
+- [x] dashboard recalculates automatically;
+- [x] charts respect active filters.
 
 ---
 

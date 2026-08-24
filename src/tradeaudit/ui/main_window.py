@@ -27,9 +27,9 @@ from tradeaudit.infrastructure.repositories.trade_repository import TradeReposit
 from tradeaudit.app.services.sync_service import SyncService
 from tradeaudit.infrastructure.mt5.connection_service import MT5ConnectionService, ConnectionState
 from tradeaudit.ui.widgets.connection_status_badge import ConnectionStatusBadge
-from tradeaudit.ui.widgets.account_info_card import AccountInfoCard
 from tradeaudit.ui.views.settings_view import SettingsView
 from tradeaudit.ui.views.trades_view import TradesView
+from tradeaudit.ui.views.dashboard_view import DashboardView
 from tradeaudit.app.exceptions import MT5Error, CredentialStoreError
 
 logger = logging.getLogger("tradeaudit.ui.main_window")
@@ -160,14 +160,7 @@ class MainWindow(QMainWindow):
         """)
 
         # Tab 1: Dashboard View
-        self.dashboard_tab = QWidget()
-        dash_layout = QVBoxLayout(self.dashboard_tab)
-        dash_layout.setContentsMargins(16, 16, 16, 16)
-        dash_layout.setSpacing(16)
-
-        self.account_card = AccountInfoCard()
-        dash_layout.addWidget(self.account_card)
-        dash_layout.addStretch()
+        self.dashboard_view = DashboardView()
 
         # Tab 2: Trades View
         self.trades_view = TradesView()
@@ -179,7 +172,7 @@ class MainWindow(QMainWindow):
         self.settings_view.connect_requested.connect(self._on_connect_requested)
         self.settings_view.disconnect_requested.connect(self._on_disconnect_requested)
 
-        self.tab_widget.addTab(self.dashboard_tab, "📈 Dashboard")
+        self.tab_widget.addTab(self.dashboard_view, "📈 Dashboard")
         self.tab_widget.addTab(self.trades_view, "📊 Trades")
         self.tab_widget.addTab(self.settings_view, "⚙️ MT5 Settings")
 
@@ -257,7 +250,7 @@ class MainWindow(QMainWindow):
                 timeout_ms=settings.timeout_ms
             )
             self.status_badge.set_status(ConnectionState.CONNECTED, server=settings.server, login=settings.login)
-            self.account_card.update_account_info(account_info)
+            self.dashboard_view.set_account_info(account_info)
             self.settings_view.show_feedback(
                 f"✅ Connected to MT5! Account: {account_info.login} ({account_info.name}) | Balance: {account_info.balance:.2f} {account_info.currency}"
             )
@@ -266,12 +259,12 @@ class MainWindow(QMainWindow):
 
         except MT5Error as e:
             self.status_badge.set_status(ConnectionState.ERROR)
-            self.account_card.update_account_info(None)
+            self.dashboard_view.set_account_info(None)
             self.settings_view.show_feedback(f"❌ Connection failed: {e.message}", is_error=True)
             self.status_bar.showMessage(f"🔴 MT5 Connection Error: {e.message}", 6000)
         except Exception as e:
             self.status_badge.set_status(ConnectionState.ERROR)
-            self.account_card.update_account_info(None)
+            self.dashboard_view.set_account_info(None)
             self.settings_view.show_feedback(f"❌ Unexpected error: {e}", is_error=True)
             self.status_bar.showMessage("🔴 Unexpected MT5 connection error.", 6000)
 
@@ -279,17 +272,18 @@ class MainWindow(QMainWindow):
         """Handle disconnect request from SettingsView."""
         self.mt5_service.disconnect()
         self.status_badge.set_status(ConnectionState.DISCONNECTED)
-        self.account_card.update_account_info(None)
+        self.dashboard_view.set_account_info(None)
         self.settings_view.show_feedback("🔌 Disconnected from MT5 terminal.")
         self.status_bar.showMessage("MT5 disconnected.", 4000)
 
     def _refresh_trades(self) -> None:
-        """Fetch stored trades from DB and update TradesView."""
+        """Fetch stored trades from DB and update TradesView and DashboardView."""
         saved_settings = self.settings_repo.load_mt5_settings()
         if saved_settings and saved_settings.login:
             trades = self.trade_repo.get_trades(saved_settings.login)
             last_sync = self.trade_repo.get_last_sync_time(saved_settings.login)
             self.trades_view.set_trades(trades, last_sync=last_sync)
+            self.dashboard_view.set_trades(trades)
 
     def _on_sync_requested(self) -> None:
         """Handle sync history action from TradesView toolbar."""

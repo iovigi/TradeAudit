@@ -140,6 +140,15 @@ class PerformanceAnalyzer:
                 curr_consecutive_wins = 0
                 curr_consecutive_losses = 0
 
+        avg_r = round(net_r / trades_with_r, 4) if trades_with_r > 0 else 0.0
+
+        # Risk Percentage
+        trades_with_risk = [t for t in closed_trades if t.risk_percentage is not None]
+        avg_risk_percentage = (
+            round(sum(t.risk_percentage for t in trades_with_risk) / len(trades_with_risk), 2)
+            if trades_with_risk else 0.0
+        )
+
         # Verdict calculation
         if not is_sample_sufficient:
             verdict = ProfitabilityVerdict.INSUFFICIENT_DATA
@@ -172,6 +181,8 @@ class PerformanceAnalyzer:
             avg_loss_monetary=avg_loss_monetary,
             avg_win_r=avg_win_r,
             avg_loss_r=avg_loss_r,
+            avg_r=avg_r,
+            avg_risk_percentage=avg_risk_percentage,
             expectancy_r=expectancy_r,
             expectancy_monetary=expectancy_monetary,
             max_drawdown_r=round(max_drawdown_r, 4),
@@ -185,3 +196,30 @@ class PerformanceAnalyzer:
             drawdown_r_series=drawdown_r_series,
             cumulative_monetary_series=cumulative_monetary_series,
         )
+
+    @classmethod
+    def analyze_by_symbol(cls, trades: List[Trade]) -> dict:
+        """Group trades by symbol and compute metrics for each symbol."""
+        symbols_map = {}
+        for t in trades:
+            sym = t.symbol.upper() if t.symbol else "UNKNOWN"
+            if sym not in symbols_map:
+                symbols_map[sym] = []
+            symbols_map[sym].append(t)
+
+        result = {}
+        for sym, sym_trades in symbols_map.items():
+            result[sym] = cls.analyze(sym_trades)
+        return result
+
+    @classmethod
+    def analyze_by_direction(cls, trades: List[Trade]) -> dict:
+        """Group trades by direction (BUY vs SELL) and compute metrics."""
+        buy_trades = [t for t in trades if t.direction and t.direction.upper() == "BUY"]
+        sell_trades = [t for t in trades if t.direction and t.direction.upper() == "SELL"]
+
+        return {
+            "BUY": cls.analyze(buy_trades),
+            "SELL": cls.analyze(sell_trades)
+        }
+

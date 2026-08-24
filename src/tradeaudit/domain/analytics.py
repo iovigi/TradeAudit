@@ -34,6 +34,8 @@ class PerformanceMetrics:
     avg_loss_monetary: float = 0.0
     avg_win_r: float = 0.0
     avg_loss_r: float = 0.0
+    avg_r: float = 0.0
+    avg_risk_percentage: float = 0.0
     expectancy_r: float = 0.0
     expectancy_monetary: float = 0.0
     max_drawdown_r: float = 0.0
