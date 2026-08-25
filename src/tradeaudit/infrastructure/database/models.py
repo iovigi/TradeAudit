@@ -46,6 +46,28 @@ class AccountModel(Base):
     trades = relationship("TradeModel", back_populates="account", cascade="all, delete-orphan")
 
 
+class StrategyModel(Base):
+    """Database representation of user trading strategies and execution rules."""
+    __tablename__ = "strategies"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    allowed_symbols = Column(Text, nullable=True)     # JSON array string or comma-separated
+    allowed_sessions = Column(Text, nullable=True)    # JSON array string or comma-separated
+    min_rr = Column(Float, nullable=True)
+    max_risk_pct = Column(Float, nullable=True)
+    max_trades_per_day = Column(Integer, nullable=True)
+    requires_sl = Column(Boolean, default=False, nullable=False)
+    requires_tp = Column(Boolean, default=False, nullable=False)
+    allowed_direction = Column(String(10), default="ALL", nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
+    trades = relationship("TradeModel", back_populates="strategy")
+
+
 class TradeModel(Base):
     """Database representation of logical aggregated trades."""
     __tablename__ = "trades"
@@ -75,11 +97,17 @@ class TradeModel(Base):
     risk_percentage = Column(Float, nullable=True)
     is_valid_setup = Column(Boolean, default=True, nullable=False)
     validation_error = Column(String(255), nullable=True)
+    strategy_id = Column(Integer, ForeignKey("strategies.id", ondelete="SET NULL"), nullable=True, index=True)
+    compliance_status = Column(String(20), default="UNCHECKED", nullable=True)
+    compliance_details = Column(Text, nullable=True)
+    deviation_reason = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     account = relationship("AccountModel", back_populates="trades")
+    strategy = relationship("StrategyModel", back_populates="trades")
     deals = relationship("TradeDealModel", back_populates="trade", cascade="all, delete-orphan")
+
 
 
 class TradeDealModel(Base):

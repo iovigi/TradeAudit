@@ -4,7 +4,49 @@ Domain models for MetaTrader 5 configuration and account information.
 
 from datetime import datetime
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Optional, List
+
+
+class ComplianceStatus(str, Enum):
+    COMPLIANT = "COMPLIANT"
+    PARTIAL = "PARTIAL"
+    DEVIATION = "DEVIATION"
+    UNCHECKED = "UNCHECKED"
+
+
+@dataclass
+class RuleViolation:
+    """Represents a single rule check failure."""
+    rule_name: str
+    message: str
+    expected: Optional[str] = None
+    actual: Optional[str] = None
+
+
+@dataclass
+class ComplianceResult:
+    """Summary of compliance evaluation for a trade against a strategy."""
+    status: ComplianceStatus = ComplianceStatus.UNCHECKED
+    violations: List[RuleViolation] = field(default_factory=list)
+    passed_rules: List[str] = field(default_factory=list)
+
+
+@dataclass
+class Strategy:
+    """Domain model representing a trading strategy and its execution rules."""
+    id: Optional[int] = None
+    name: str = ""
+    description: str = ""
+    allowed_symbols: List[str] = field(default_factory=list)   # Empty list means all symbols allowed
+    allowed_sessions: List[str] = field(default_factory=list)  # e.g., ["ASIA", "LONDON", "NEW_YORK"], empty = all
+    min_rr: Optional[float] = None
+    max_risk_pct: Optional[float] = None
+    max_trades_per_day: Optional[int] = None
+    requires_sl: bool = False
+    requires_tp: bool = False
+    allowed_direction: str = "ALL"                             # ALL, BUY, SELL
+    is_active: bool = True
 
 
 @dataclass
@@ -85,6 +127,10 @@ class Trade:
     risk_percentage: Optional[float] = None
     is_valid_setup: bool = True
     validation_error: Optional[str] = None
+    strategy_id: Optional[int] = None
+    compliance_status: Optional[str] = ComplianceStatus.UNCHECKED.value
+    compliance_details: Optional[str] = None
+    deviation_reason: Optional[str] = None
     deals: List[TradeDeal] = field(default_factory=list)
 
     @property
@@ -102,4 +148,5 @@ class SyncResult:
     trades_updated: int = 0
     success: bool = True
     message: str = ""
+
 

@@ -140,6 +140,10 @@ class TradeRepository:
                 trade_model.risk_percentage = trade.risk_percentage
                 trade_model.is_valid_setup = trade.is_valid_setup
                 trade_model.validation_error = trade.validation_error
+                trade_model.strategy_id = trade.strategy_id
+                trade_model.compliance_status = trade.compliance_status
+                trade_model.compliance_details = trade.compliance_details
+                trade_model.deviation_reason = trade.deviation_reason
 
                 session.flush()  # Ensures trade_model.id is populated
 
@@ -219,6 +223,10 @@ class TradeRepository:
                     risk_percentage=tm.risk_percentage,
                     is_valid_setup=tm.is_valid_setup,
                     validation_error=tm.validation_error,
+                    strategy_id=tm.strategy_id,
+                    compliance_status=tm.compliance_status,
+                    compliance_details=tm.compliance_details,
+                    deviation_reason=tm.deviation_reason,
                     deals=deals
                 )
                 result_trades.append(trade)

@@ -9,6 +9,8 @@ from tradeaudit.app.services.trade_aggregator import TradeAggregator
 from tradeaudit.app.services.trade_normalizer import TradeNormalizer
 from tradeaudit.app.services.trade_validator import TradeValidator
 from tradeaudit.app.services.performance_analyzer import PerformanceAnalyzer
+from tradeaudit.app.services.strategy_compliance_engine import StrategyComplianceEngine
+from tradeaudit.app.services.strategy_service import StrategyService
 
 __all__ = [
     "RiskCalculator",
@@ -18,4 +20,7 @@ __all__ = [
     "TradeNormalizer",
     "TradeValidator",
     "PerformanceAnalyzer",
+    "StrategyComplianceEngine",
+    "StrategyService",
 ]
+

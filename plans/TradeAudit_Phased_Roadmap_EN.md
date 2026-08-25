@@ -563,13 +563,14 @@ DEVIATION
 
 ## Definition of Done
 
-- [ ] strategies can be created;
-- [ ] strategies can be edited;
-- [ ] trades can be linked to a strategy;
-- [ ] manual compliance can be recorded;
-- [ ] automatic rule checks work;
-- [ ] deviation reasons are stored;
-- [ ] compliant and deviation trades can be analyzed separately.
+- [x] strategies can be created;
+- [x] strategies can be edited;
+- [x] trades can be linked to a strategy;
+- [x] manual compliance can be recorded;
+- [x] automatic rule checks work;
+- [x] deviation reasons are stored;
+- [x] compliant and deviation trades can be analyzed separately.
+
 
 ---
 

@@ -24,12 +24,15 @@ from tradeaudit.infrastructure.database.connection import DatabaseManager
 from tradeaudit.infrastructure.security.credential_store import CredentialStore
 from tradeaudit.infrastructure.repositories.settings_repository import SettingsRepository
 from tradeaudit.infrastructure.repositories.trade_repository import TradeRepository
+from tradeaudit.infrastructure.repositories.strategy_repository import StrategyRepository
 from tradeaudit.app.services.sync_service import SyncService
+from tradeaudit.app.services.strategy_service import StrategyService
 from tradeaudit.infrastructure.mt5.connection_service import MT5ConnectionService, ConnectionState
 from tradeaudit.ui.widgets.connection_status_badge import ConnectionStatusBadge
 from tradeaudit.ui.views.settings_view import SettingsView
 from tradeaudit.ui.views.trades_view import TradesView
 from tradeaudit.ui.views.dashboard_view import DashboardView
+from tradeaudit.ui.views.strategy_view import StrategyView
 from tradeaudit.app.exceptions import MT5Error, CredentialStoreError
 
 logger = logging.getLogger("tradeaudit.ui.main_window")
@@ -46,6 +49,8 @@ class MainWindow(QMainWindow):
         credential_store: Optional[CredentialStore] = None,
         settings_repo: Optional[SettingsRepository] = None,
         trade_repo: Optional[TradeRepository] = None,
+        strategy_repo: Optional[StrategyRepository] = None,
+        strategy_service: Optional[StrategyService] = None,
         sync_service: Optional[SyncService] = None
     ):
         super().__init__()
@@ -57,6 +62,8 @@ class MainWindow(QMainWindow):
         self.credential_store = credential_store or CredentialStore()
         self.settings_repo = settings_repo or SettingsRepository(self.db_manager)
         self.trade_repo = trade_repo or TradeRepository(self.db_manager)
+        self.strategy_repo = strategy_repo or StrategyRepository(self.db_manager)
+        self.strategy_service = strategy_service or StrategyService(self.strategy_repo, self.trade_repo)
         self.sync_service = sync_service or SyncService(trade_repo=self.trade_repo)
 
         self.setWindowTitle(f"{self.settings.app_name} v{self.settings.app_version}")
@@ -69,7 +76,7 @@ class MainWindow(QMainWindow):
         self._load_saved_configuration()
         self._refresh_trades()
 
-        logger.info("MainWindow initialized with MT5, Settings & Trade Sync services.")
+        logger.info("MainWindow initialized with MT5, Settings, Trade Sync & Strategy services.")
 
 
     def _apply_dark_theme(self) -> None:
@@ -166,7 +173,11 @@ class MainWindow(QMainWindow):
         self.trades_view = TradesView()
         self.trades_view.sync_requested.connect(self._on_sync_requested)
 
-        # Tab 3: Settings View
+        # Tab 3: Strategy Management View
+        self.strategy_view = StrategyView(strategy_service=self.strategy_service)
+        self.strategy_view.strategy_changed.connect(self._on_strategy_changed)
+
+        # Tab 4: Settings View
         self.settings_view = SettingsView()
         self.settings_view.settings_saved.connect(self._on_settings_saved)
         self.settings_view.connect_requested.connect(self._on_connect_requested)
@@ -174,10 +185,19 @@ class MainWindow(QMainWindow):
 
         self.tab_widget.addTab(self.dashboard_view, "📈 Dashboard")
         self.tab_widget.addTab(self.trades_view, "📊 Trades")
+        self.tab_widget.addTab(self.strategy_view, "🎯 Strategies")
         self.tab_widget.addTab(self.settings_view, "⚙️ MT5 Settings")
 
         layout.addWidget(header_card)
         layout.addWidget(self.tab_widget, stretch=1)
+
+    def _on_strategy_changed(self) -> None:
+        """Handle strategy creation/update/deletion events."""
+        saved_settings = self.settings_repo.load_mt5_settings()
+        if saved_settings and saved_settings.login:
+            self.strategy_service.reevaluate_account_compliance(saved_settings.login)
+            self._refresh_trades()
+
 
 
     def _init_status_bar(self) -> None:
