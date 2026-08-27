@@ -1,7 +1,4 @@
-"""
-Repository for persisting and querying accounts, trades, deals, and sync state in SQLite.
-"""
-
+import json
 import logging
 from typing import List, Optional
 from datetime import datetime, timezone
@@ -13,7 +10,15 @@ from tradeaudit.infrastructure.database.models import (
     TradeDealModel,
     SyncStateModel
 )
-from tradeaudit.domain.models import TradeDeal, Trade, MT5AccountInfo
+from tradeaudit.domain.models import (
+    TradeDeal,
+    Trade,
+    MT5AccountInfo,
+    BehaviorFlag,
+    BehaviorFlagType,
+    ConfidenceLevel,
+    UserBehaviorAction
+)
 
 logger = logging.getLogger("tradeaudit.infrastructure.repositories.trade_repository")
 
@@ -144,6 +149,23 @@ class TradeRepository:
                 trade_model.compliance_status = trade.compliance_status
                 trade_model.compliance_details = trade.compliance_details
                 trade_model.deviation_reason = trade.deviation_reason
+                trade_model.emotion_tag = trade.emotion_tag
+                trade_model.user_behavior_action = trade.user_behavior_action or UserBehaviorAction.UNREVIEWED.value
+                trade_model.behavior_notes = trade.behavior_notes
+
+                if trade.auto_behavior_flags:
+                    flags_data = [
+                        {
+                            "flag_type": f.flag_type.value if hasattr(f.flag_type, "value") else str(f.flag_type),
+                            "confidence": f.confidence.value if hasattr(f.confidence, "value") else str(f.confidence),
+                            "reason": f.reason,
+                            "metrics": f.metrics
+                        }
+                        for f in trade.auto_behavior_flags
+                    ]
+                    trade_model.auto_behavior_flags = json.dumps(flags_data)
+                else:
+                    trade_model.auto_behavior_flags = None
 
                 session.flush()  # Ensures trade_model.id is populated
 
@@ -197,6 +219,20 @@ class TradeRepository:
                     for dm in deal_models
                 ]
 
+                parsed_flags: List[BehaviorFlag] = []
+                if tm.auto_behavior_flags:
+                    try:
+                        raw_list = json.loads(tm.auto_behavior_flags)
+                        for item in raw_list:
+                            parsed_flags.append(BehaviorFlag(
+                                flag_type=BehaviorFlagType(item["flag_type"]),
+                                confidence=ConfidenceLevel(item["confidence"]),
+                                reason=item.get("reason", ""),
+                                metrics=item.get("metrics", {})
+                            ))
+                    except Exception as e:
+                        logger.warning("Failed to parse auto_behavior_flags for trade %s: %s", tm.id, e)
+
                 trade = Trade(
                     id=tm.id,
                     account_id=tm.account_id,
@@ -227,11 +263,52 @@ class TradeRepository:
                     compliance_status=tm.compliance_status,
                     compliance_details=tm.compliance_details,
                     deviation_reason=tm.deviation_reason,
+                    emotion_tag=tm.emotion_tag,
+                    auto_behavior_flags=parsed_flags,
+                    user_behavior_action=tm.user_behavior_action or UserBehaviorAction.UNREVIEWED.value,
+                    behavior_notes=tm.behavior_notes,
                     deals=deals
                 )
                 result_trades.append(trade)
 
         return result_trades
+
+    def update_trade_behavior(
+        self,
+        trade_id: int,
+        emotion_tag: Optional[str] = None,
+        auto_behavior_flags: Optional[List[BehaviorFlag]] = None,
+        user_behavior_action: Optional[str] = None,
+        behavior_notes: Optional[str] = None
+    ) -> bool:
+        """Update behavioral metadata for a specific trade."""
+        with self.db_manager.session_scope() as session:
+            trade_model = session.query(TradeModel).filter(TradeModel.id == trade_id).first()
+            if not trade_model:
+                logger.warning("Cannot update behavior for nonexistent trade ID %s", trade_id)
+                return False
+
+            if emotion_tag is not None:
+                trade_model.emotion_tag = emotion_tag
+            if user_behavior_action is not None:
+                trade_model.user_behavior_action = user_behavior_action
+            if behavior_notes is not None:
+                trade_model.behavior_notes = behavior_notes
+
+            if auto_behavior_flags is not None:
+                flags_data = [
+                    {
+                        "flag_type": f.flag_type.value if hasattr(f.flag_type, "value") else str(f.flag_type),
+                        "confidence": f.confidence.value if hasattr(f.confidence, "value") else str(f.confidence),
+                        "reason": f.reason,
+                        "metrics": f.metrics
+                    }
+                    for f in auto_behavior_flags
+                ]
+                trade_model.auto_behavior_flags = json.dumps(flags_data)
+
+            logger.info("Updated behavioral metadata for trade ID %s", trade_id)
+            return True
 
     def update_sync_state(self, account_id: int, sync_time: datetime, deals_count: int, trades_count: int) -> None:
         """Update synchronization metadata checkpoint."""

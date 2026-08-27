@@ -101,6 +101,10 @@ class TradeModel(Base):
     compliance_status = Column(String(20), default="UNCHECKED", nullable=True)
     compliance_details = Column(Text, nullable=True)
     deviation_reason = Column(Text, nullable=True)
+    emotion_tag = Column(String(50), nullable=True, index=True)
+    auto_behavior_flags = Column(Text, nullable=True)
+    user_behavior_action = Column(String(20), default="UNREVIEWED", nullable=True)
+    behavior_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 

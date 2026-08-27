@@ -47,6 +47,8 @@ class TradesTableModel(QAbstractTableModel):
         "Risk %",
         "Realized R",
         "Net Profit",
+        "Emotion",
+        "Behavior Flags",
         "Status"
     ]
 
@@ -114,9 +116,20 @@ class TradesTableModel(QAbstractTableModel):
             elif col == 13:
                 return f"{trade.net_profit:+.2f}"
             elif col == 14:
+                return trade.emotion_tag or "—"
+            elif col == 15:
+                if not trade.auto_behavior_flags:
+                    return "—"
+                flag_names = [f.flag_type.value if hasattr(f.flag_type, 'value') else str(f.flag_type) for f in trade.auto_behavior_flags]
+                action_str = f" [{trade.user_behavior_action}]" if trade.user_behavior_action and trade.user_behavior_action != "UNREVIEWED" else ""
+                return ", ".join(flag_names) + action_str
+            elif col == 16:
                 return trade.status if trade.is_valid_setup else f"{trade.status} (⚠️ Invalid Setup)"
 
         elif role == Qt.ToolTipRole:
+            if col == 15 and trade.auto_behavior_flags:
+                details = [f"[{f.confidence.value if hasattr(f.confidence, 'value') else f.confidence}] {f.reason}" for f in trade.auto_behavior_flags]
+                return "\n".join(details)
             if not trade.is_valid_setup and trade.validation_error:
                 return f"Validation Alert: {trade.validation_error}"
             if trade.initial_sl is None:
@@ -142,7 +155,20 @@ class TradesTableModel(QAbstractTableModel):
                     return QBrush(QColor("#ff5252"))
                 else:
                     return QBrush(QColor("#a0aec0"))
-            elif col == 14:  # Status
+            elif col == 14:  # Emotion
+                if trade.emotion_tag in ("FOMO", "REVENGE", "FRUSTRATION", "IMPULSIVE"):
+                    return QBrush(QColor("#ff5252"))
+                elif trade.emotion_tag == "CALM":
+                    return QBrush(QColor("#00e676"))
+                return QBrush(QColor("#ffb74d")) if trade.emotion_tag else QBrush(QColor("#a0aec0"))
+            elif col == 15:  # Behavior Flags
+                if trade.auto_behavior_flags:
+                    if trade.user_behavior_action == "CONFIRMED":
+                        return QBrush(QColor("#ff5252"))
+                    elif trade.user_behavior_action == "REJECTED":
+                        return QBrush(QColor("#8b9bb4"))
+                    return QBrush(QColor("#ffb74d"))
+            elif col == 16:  # Status
                 if not trade.is_valid_setup:
                     return QBrush(QColor("#ff5252"))
                 return QBrush(QColor("#00b0ff") if trade.status == "OPEN" else QBrush(QColor("#8b9bb4")))
@@ -150,7 +176,7 @@ class TradesTableModel(QAbstractTableModel):
         elif role == Qt.TextAlignmentRole:
             if col in (3, 5, 6, 7, 8, 9, 10, 11, 12, 13):
                 return int(Qt.AlignRight | Qt.AlignVCenter)
-            elif col in (0, 1, 2, 14):
+            elif col in (0, 1, 2, 14, 16):
                 return int(Qt.AlignCenter | Qt.AlignVCenter)
             return int(Qt.AlignLeft | Qt.AlignVCenter)
 

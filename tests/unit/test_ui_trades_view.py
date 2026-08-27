@@ -35,7 +35,7 @@ def test_trades_table_model(qtbot):
 
     model = TradesTableModel([trade])
     assert model.rowCount() == 1
-    assert model.columnCount() == 15
+    assert model.columnCount() == 17
 
     # Column 0: Position ID
     assert model.data(model.index(0, 0), Qt.DisplayRole) == "50"
@@ -47,6 +47,12 @@ def test_trades_table_model(qtbot):
     assert model.data(model.index(0, 12), Qt.DisplayRole) == "UNKNOWN"
     # Column 13: Net Profit
     assert model.data(model.index(0, 13), Qt.DisplayRole) == "+500.00"
+    # Column 14: Emotion
+    assert model.data(model.index(0, 14), Qt.DisplayRole) == "—"
+    # Column 15: Behavior Flags
+    assert model.data(model.index(0, 15), Qt.DisplayRole) == "—"
+    # Column 16: Status
+    assert model.data(model.index(0, 16), Qt.DisplayRole) == "CLOSED"
 
 
 def test_trades_view_instantiation_and_filtering(qtbot):

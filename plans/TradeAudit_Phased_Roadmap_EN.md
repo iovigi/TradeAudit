@@ -661,14 +661,14 @@ Reject
 
 ## Definition of Done
 
-- [ ] manual emotional tags work;
-- [ ] revenge heuristic works;
-- [ ] FOMO heuristic works;
-- [ ] overtrading detection works;
-- [ ] risk escalation works;
-- [ ] SL violations work;
-- [ ] automatic flags explain their reasons;
-- [ ] user can confirm/reject flags.
+- [x] manual emotional tags work;
+- [x] revenge heuristic works;
+- [x] FOMO heuristic works;
+- [x] overtrading detection works;
+- [x] risk escalation works;
+- [x] SL violations work;
+- [x] automatic flags explain their reasons;
+- [x] user can confirm/reject flags.
 
 ---
 

@@ -11,7 +11,12 @@ from tradeaudit.domain.models import (
     Strategy,
     ComplianceStatus,
     RuleViolation,
-    ComplianceResult
+    ComplianceResult,
+    EmotionTag,
+    BehaviorFlagType,
+    ConfidenceLevel,
+    UserBehaviorAction,
+    BehaviorFlag
 )
 from tradeaudit.domain.analytics import PerformanceMetrics, ProfitabilityVerdict
 from tradeaudit.domain.filters import (
@@ -32,6 +37,11 @@ __all__ = [
     "ComplianceStatus",
     "RuleViolation",
     "ComplianceResult",
+    "EmotionTag",
+    "BehaviorFlagType",
+    "ConfidenceLevel",
+    "UserBehaviorAction",
+    "BehaviorFlag",
     "PerformanceMetrics",
     "ProfitabilityVerdict",
     "AnalysisFilter",

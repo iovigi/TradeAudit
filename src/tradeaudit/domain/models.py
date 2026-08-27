@@ -15,6 +15,49 @@ class ComplianceStatus(str, Enum):
     UNCHECKED = "UNCHECKED"
 
 
+class EmotionTag(str, Enum):
+    CALM = "CALM"
+    FOMO = "FOMO"
+    FEAR = "FEAR"
+    GREED = "GREED"
+    REVENGE = "REVENGE"
+    BOREDOM = "BOREDOM"
+    FRUSTRATION = "FRUSTRATION"
+    OVERCONFIDENCE = "OVERCONFIDENCE"
+    IMPULSIVE = "IMPULSIVE"
+    OTHER = "OTHER"
+
+
+class BehaviorFlagType(str, Enum):
+    POSSIBLE_REVENGE_TRADE = "POSSIBLE_REVENGE_TRADE"
+    POSSIBLE_FOMO = "POSSIBLE_FOMO"
+    OVERTRADING = "OVERTRADING"
+    RISK_ESCALATION = "RISK_ESCALATION"
+    SL_MOVED_AWAY = "SL_MOVED_AWAY"
+
+
+class ConfidenceLevel(str, Enum):
+    NONE = "NONE"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
+class UserBehaviorAction(str, Enum):
+    UNREVIEWED = "UNREVIEWED"
+    CONFIRMED = "CONFIRMED"
+    REJECTED = "REJECTED"
+
+
+@dataclass
+class BehaviorFlag:
+    """Represents an automatically detected behavioral issue."""
+    flag_type: BehaviorFlagType
+    confidence: ConfidenceLevel
+    reason: str
+    metrics: dict = field(default_factory=dict)
+
+
 @dataclass
 class RuleViolation:
     """Represents a single rule check failure."""
@@ -131,6 +174,10 @@ class Trade:
     compliance_status: Optional[str] = ComplianceStatus.UNCHECKED.value
     compliance_details: Optional[str] = None
     deviation_reason: Optional[str] = None
+    emotion_tag: Optional[str] = None
+    auto_behavior_flags: List[BehaviorFlag] = field(default_factory=list)
+    user_behavior_action: Optional[str] = UserBehaviorAction.UNREVIEWED.value
+    behavior_notes: Optional[str] = None
     deals: List[TradeDeal] = field(default_factory=list)
 
     @property
