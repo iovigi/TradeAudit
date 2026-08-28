@@ -48,3 +48,37 @@ class PerformanceMetrics:
     cumulative_r_series: List[float] = field(default_factory=list)
     drawdown_r_series: List[float] = field(default_factory=list)
     cumulative_monetary_series: List[float] = field(default_factory=list)
+
+
+@dataclass
+class FourQuadrantCounts:
+    """Four-Quadrant classification counts and aggregate R/monetary statistics."""
+    good_wins_count: int = 0
+    good_wins_net_r: float = 0.0
+    good_wins_profit: float = 0.0
+
+    good_losses_count: int = 0
+    good_losses_net_r: float = 0.0
+    good_losses_profit: float = 0.0
+
+    bad_wins_count: int = 0
+    bad_wins_net_r: float = 0.0
+    bad_wins_profit: float = 0.0
+
+    bad_losses_count: int = 0
+    bad_losses_net_r: float = 0.0
+    bad_losses_profit: float = 0.0
+
+
+@dataclass
+class StrategyVsTraderComparison:
+    """Comparative analysis metrics contrasting strategy quality against execution quality."""
+    total_performance: PerformanceMetrics = field(default_factory=PerformanceMetrics)
+    compliant_performance: PerformanceMetrics = field(default_factory=PerformanceMetrics)
+    deviation_performance: PerformanceMetrics = field(default_factory=PerformanceMetrics)
+    emotional_performance: PerformanceMetrics = field(default_factory=PerformanceMetrics)
+    four_quadrants: FourQuadrantCounts = field(default_factory=FourQuadrantCounts)
+    deviation_cost_r: float = 0.0
+    deviation_cost_monetary: float = 0.0
+    quality_verdict: str = "INSUFFICIENT_DATA"
+

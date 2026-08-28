@@ -763,12 +763,12 @@ Deviation Trades:
 
 ## Definition of Done
 
-- [ ] compliant subset metrics exist;
-- [ ] deviation subset metrics exist;
-- [ ] emotional subset metrics exist;
-- [ ] four-quadrant classification exists;
-- [ ] deviation cost in R is visible;
-- [ ] reports clearly separate strategy quality from execution quality.
+- [x] compliant subset metrics exist;
+- [x] deviation subset metrics exist;
+- [x] emotional subset metrics exist;
+- [x] four-quadrant classification exists;
+- [x] deviation cost in R is visible;
+- [x] reports clearly separate strategy quality from execution quality.
 
 ---
 
