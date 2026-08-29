@@ -845,12 +845,12 @@ Overlap
 
 ## Definition of Done
 
-- [ ] symbol performance works;
-- [ ] BUY vs SELL works;
-- [ ] weekday analysis works;
-- [ ] hourly analysis works;
-- [ ] session analysis works;
-- [ ] post-win/post-loss behavior can be analyzed.
+- [x] symbol performance works;
+- [x] BUY vs SELL works;
+- [x] weekday analysis works;
+- [x] hourly analysis works;
+- [x] session analysis works;
+- [x] post-win/post-loss behavior can be analyzed.
 
 ---
 

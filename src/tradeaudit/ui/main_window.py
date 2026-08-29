@@ -34,6 +34,7 @@ from tradeaudit.ui.views.trades_view import TradesView
 from tradeaudit.ui.views.dashboard_view import DashboardView
 from tradeaudit.ui.views.strategy_view import StrategyView
 from tradeaudit.ui.views.strategy_vs_trader_view import StrategyVsTraderView
+from tradeaudit.ui.views.breakdown_view import BreakdownView
 from tradeaudit.app.exceptions import MT5Error, CredentialStoreError
 
 logger = logging.getLogger("tradeaudit.ui.main_window")
@@ -181,7 +182,10 @@ class MainWindow(QMainWindow):
         # Tab 4: Strategy vs Trader View
         self.strategy_vs_trader_view = StrategyVsTraderView()
 
-        # Tab 5: Settings View
+        # Tab 5: Breakdown Analytics View
+        self.breakdown_view = BreakdownView()
+
+        # Tab 6: Settings View
         self.settings_view = SettingsView()
         self.settings_view.settings_saved.connect(self._on_settings_saved)
         self.settings_view.connect_requested.connect(self._on_connect_requested)
@@ -191,6 +195,7 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.trades_view, "📊 Trades")
         self.tab_widget.addTab(self.strategy_view, "🎯 Strategies")
         self.tab_widget.addTab(self.strategy_vs_trader_view, "⚖️ Strategy vs Trader")
+        self.tab_widget.addTab(self.breakdown_view, "🔍 Breakdowns")
         self.tab_widget.addTab(self.settings_view, "⚙️ MT5 Settings")
 
         layout.addWidget(header_card)
@@ -310,6 +315,7 @@ class MainWindow(QMainWindow):
             self.trades_view.set_trades(trades, last_sync=last_sync)
             self.dashboard_view.set_trades(trades)
             self.strategy_vs_trader_view.set_trades(trades)
+            self.breakdown_view.set_trades(trades)
 
     def _on_sync_requested(self) -> None:
         """Handle sync history action from TradesView toolbar."""
