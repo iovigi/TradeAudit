@@ -13,6 +13,7 @@ from tradeaudit.app.services.strategy_compliance_engine import StrategyComplianc
 from tradeaudit.app.services.strategy_service import StrategyService
 from tradeaudit.app.services.behavior_analyzer import BehaviorAnalyzer
 from tradeaudit.app.services.behavior_service import BehaviorService
+from tradeaudit.app.services.live_position_watcher import LivePositionWatcherService
 
 __all__ = [
     "RiskCalculator",
@@ -26,5 +27,7 @@ __all__ = [
     "StrategyService",
     "BehaviorAnalyzer",
     "BehaviorService",
+    "LivePositionWatcherService",
 ]
+
 

@@ -25,8 +25,10 @@ from tradeaudit.infrastructure.security.credential_store import CredentialStore
 from tradeaudit.infrastructure.repositories.settings_repository import SettingsRepository
 from tradeaudit.infrastructure.repositories.trade_repository import TradeRepository
 from tradeaudit.infrastructure.repositories.strategy_repository import StrategyRepository
+from tradeaudit.infrastructure.repositories.trade_event_repository import TradeEventRepository
 from tradeaudit.app.services.sync_service import SyncService
 from tradeaudit.app.services.strategy_service import StrategyService
+from tradeaudit.app.services.live_position_watcher import LivePositionWatcherService
 from tradeaudit.infrastructure.mt5.connection_service import MT5ConnectionService, ConnectionState
 from tradeaudit.ui.widgets.connection_status_badge import ConnectionStatusBadge
 from tradeaudit.ui.views.settings_view import SettingsView
@@ -35,6 +37,7 @@ from tradeaudit.ui.views.dashboard_view import DashboardView
 from tradeaudit.ui.views.strategy_view import StrategyView
 from tradeaudit.ui.views.strategy_vs_trader_view import StrategyVsTraderView
 from tradeaudit.ui.views.breakdown_view import BreakdownView
+from tradeaudit.ui.views.live_journal_view import LiveJournalView
 from tradeaudit.app.exceptions import MT5Error, CredentialStoreError
 
 logger = logging.getLogger("tradeaudit.ui.main_window")
@@ -52,8 +55,10 @@ class MainWindow(QMainWindow):
         settings_repo: Optional[SettingsRepository] = None,
         trade_repo: Optional[TradeRepository] = None,
         strategy_repo: Optional[StrategyRepository] = None,
+        trade_event_repo: Optional[TradeEventRepository] = None,
         strategy_service: Optional[StrategyService] = None,
-        sync_service: Optional[SyncService] = None
+        sync_service: Optional[SyncService] = None,
+        live_watcher_service: Optional[LivePositionWatcherService] = None
     ):
         super().__init__()
         self.settings = settings
@@ -65,8 +70,13 @@ class MainWindow(QMainWindow):
         self.settings_repo = settings_repo or SettingsRepository(self.db_manager)
         self.trade_repo = trade_repo or TradeRepository(self.db_manager)
         self.strategy_repo = strategy_repo or StrategyRepository(self.db_manager)
+        self.trade_event_repo = trade_event_repo or TradeEventRepository(self.db_manager)
         self.strategy_service = strategy_service or StrategyService(self.strategy_repo, self.trade_repo)
         self.sync_service = sync_service or SyncService(trade_repo=self.trade_repo)
+        self.live_watcher_service = live_watcher_service or LivePositionWatcherService(
+            event_repository=self.trade_event_repo,
+            sync_service=self.sync_service
+        )
 
         self.setWindowTitle(f"{self.settings.app_name} v{self.settings.app_version}")
         self.resize(1100, 750)
@@ -78,7 +88,8 @@ class MainWindow(QMainWindow):
         self._load_saved_configuration()
         self._refresh_trades()
 
-        logger.info("MainWindow initialized with MT5, Settings, Trade Sync & Strategy services.")
+        logger.info("MainWindow initialized with MT5, Settings, Trade Sync, Strategy & Live Journal services.")
+
 
 
     def _apply_dark_theme(self) -> None:
@@ -185,7 +196,11 @@ class MainWindow(QMainWindow):
         # Tab 5: Breakdown Analytics View
         self.breakdown_view = BreakdownView()
 
-        # Tab 6: Settings View
+        # Tab 6: Live Trade Journal
+        self.live_journal_view = LiveJournalView()
+        self.live_journal_view.poll_requested.connect(self._poll_live_positions)
+
+        # Tab 7: Settings View
         self.settings_view = SettingsView()
         self.settings_view.settings_saved.connect(self._on_settings_saved)
         self.settings_view.connect_requested.connect(self._on_connect_requested)
@@ -196,10 +211,28 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.strategy_view, "🎯 Strategies")
         self.tab_widget.addTab(self.strategy_vs_trader_view, "⚖️ Strategy vs Trader")
         self.tab_widget.addTab(self.breakdown_view, "🔍 Breakdowns")
+        self.tab_widget.addTab(self.live_journal_view, "📝 Live Journal")
         self.tab_widget.addTab(self.settings_view, "⚙️ MT5 Settings")
 
         layout.addWidget(header_card)
         layout.addWidget(self.tab_widget, stretch=1)
+
+    def _poll_live_positions(self) -> None:
+        """Poll active MT5 positions and update LiveJournalView."""
+        saved_settings = self.settings_repo.load_mt5_settings()
+        account_id = saved_settings.login if saved_settings else 0
+        if not account_id:
+            self.live_journal_view.set_status("Configure MT5 settings first")
+            return
+
+        if self.mt5_service.is_connected():
+            positions = self.live_watcher_service.poll_positions(account_id)
+            events = self.trade_event_repo.get_all_events(limit=100)
+            self.live_journal_view.update_positions(positions)
+            self.live_journal_view.update_events(events)
+            self.live_journal_view.set_status(f"Active ({len(positions)} open position(s))")
+        else:
+            self.live_journal_view.set_status("MT5 Disconnected")
 
     def _on_strategy_changed(self) -> None:
         """Handle strategy creation/update/deletion events."""
@@ -207,6 +240,7 @@ class MainWindow(QMainWindow):
         if saved_settings and saved_settings.login:
             self.strategy_service.reevaluate_account_compliance(saved_settings.login)
             self._refresh_trades()
+
 
 
 

@@ -111,7 +111,9 @@ class TradeModel(Base):
     account = relationship("AccountModel", back_populates="trades")
     strategy = relationship("StrategyModel", back_populates="trades")
     deals = relationship("TradeDealModel", back_populates="trade", cascade="all, delete-orphan")
-
+    sl_history = relationship("SLHistoryModel", back_populates="trade", cascade="all, delete-orphan")
+    tp_history = relationship("TPHistoryModel", back_populates="trade", cascade="all, delete-orphan")
+    events = relationship("TradeEventModel", back_populates="trade", cascade="all, delete-orphan")
 
 
 class TradeDealModel(Base):
@@ -150,4 +152,48 @@ class SyncStateModel(Base):
     deals_count = Column(Integer, default=0)
     trades_count = Column(Integer, default=0)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class SLHistoryModel(Base):
+    """Database representation of Stop-Loss modification history."""
+    __tablename__ = "sl_history"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    trade_id = Column(Integer, ForeignKey("trades.id", ondelete="CASCADE"), nullable=True, index=True)
+    position_id = Column(Integer, nullable=False, index=True)
+    old_sl = Column(Float, nullable=True)
+    new_sl = Column(Float, nullable=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    change_reason = Column(String(100), nullable=True)
+
+    trade = relationship("TradeModel", back_populates="sl_history")
+
+
+class TPHistoryModel(Base):
+    """Database representation of Take-Profit modification history."""
+    __tablename__ = "tp_history"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    trade_id = Column(Integer, ForeignKey("trades.id", ondelete="CASCADE"), nullable=True, index=True)
+    position_id = Column(Integer, nullable=False, index=True)
+    old_tp = Column(Float, nullable=True)
+    new_tp = Column(Float, nullable=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+
+    trade = relationship("TradeModel", back_populates="tp_history")
+
+
+class TradeEventModel(Base):
+    """Database representation of lifecycle events for a position/trade."""
+    __tablename__ = "trade_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    trade_id = Column(Integer, ForeignKey("trades.id", ondelete="CASCADE"), nullable=True, index=True)
+    position_id = Column(Integer, nullable=False, index=True)
+    event_type = Column(String(50), nullable=False, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    details = Column(Text, nullable=True)
+
+    trade = relationship("TradeModel", back_populates="events")
+
 

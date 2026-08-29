@@ -893,13 +893,14 @@ This phase improves the accuracy of:
 
 ## Definition of Done
 
-- [ ] new positions are detected;
-- [ ] initial SL is captured;
-- [ ] initial TP is captured;
-- [ ] SL modifications are recorded;
-- [ ] TP modifications are recorded;
-- [ ] partial closes are recorded;
-- [ ] position sizing changes are recorded.
+- [x] new positions are detected;
+- [x] initial SL is captured;
+- [x] initial TP is captured;
+- [x] SL modifications are recorded;
+- [x] TP modifications are recorded;
+- [x] partial closes are recorded;
+- [x] position sizing changes are recorded.
+
 
 ---
 

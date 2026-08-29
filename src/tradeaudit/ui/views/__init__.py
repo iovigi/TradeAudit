@@ -5,6 +5,7 @@ from tradeaudit.ui.views.dashboard_view import DashboardView
 from tradeaudit.ui.views.strategy_view import StrategyView, StrategyFormDialog
 from tradeaudit.ui.views.strategy_vs_trader_view import StrategyVsTraderView
 from tradeaudit.ui.views.breakdown_view import BreakdownView
+from tradeaudit.ui.views.live_journal_view import LiveJournalView
 
 __all__ = [
     "SettingsView",
@@ -14,7 +15,9 @@ __all__ = [
     "StrategyFormDialog",
     "StrategyVsTraderView",
     "BreakdownView",
+    "LiveJournalView",
 ]
+
 
 
 

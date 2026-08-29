@@ -197,3 +197,66 @@ class SyncResult:
     message: str = ""
 
 
+class TradeEventType(str, Enum):
+    POSITION_OPENED = "POSITION_OPENED"
+    SL_MODIFIED = "SL_MODIFIED"
+    TP_MODIFIED = "TP_MODIFIED"
+    VOLUME_CHANGED = "VOLUME_CHANGED"
+    PARTIAL_CLOSE = "PARTIAL_CLOSE"
+    SCALE_IN = "SCALE_IN"
+    POSITION_CLOSED = "POSITION_CLOSED"
+
+
+@dataclass
+class LivePosition:
+    """Domain model for active MT5 position snapshot."""
+    ticket: int
+    account_id: int = 0
+    position_id: int = 0
+    symbol: str = ""
+    type: str = "BUY"  # BUY, SELL
+    volume: float = 0.0
+    price_open: float = 0.0
+    sl: float = 0.0
+    tp: float = 0.0
+    profit: float = 0.0
+    swap: float = 0.0
+    time: Optional[datetime] = None
+    magic: int = 0
+
+
+@dataclass
+class SLHistoryRecord:
+    """Domain entity representing a recorded Stop-Loss modification."""
+    id: Optional[int] = None
+    trade_id: Optional[int] = None
+    position_id: int = 0
+    old_sl: Optional[float] = None
+    new_sl: Optional[float] = None
+    timestamp: Optional[datetime] = None
+    change_reason: Optional[str] = None
+
+
+@dataclass
+class TPHistoryRecord:
+    """Domain entity representing a recorded Take-Profit modification."""
+    id: Optional[int] = None
+    trade_id: Optional[int] = None
+    position_id: int = 0
+    old_tp: Optional[float] = None
+    new_tp: Optional[float] = None
+    timestamp: Optional[datetime] = None
+
+
+@dataclass
+class TradeEventRecord:
+    """Domain entity representing a significant lifecycle event of a trade/position."""
+    id: Optional[int] = None
+    trade_id: Optional[int] = None
+    position_id: int = 0
+    event_type: str = TradeEventType.POSITION_OPENED.value
+    timestamp: Optional[datetime] = None
+    details: dict = field(default_factory=dict)
+
+
+
