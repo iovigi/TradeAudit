@@ -38,7 +38,9 @@ from tradeaudit.ui.views.strategy_view import StrategyView
 from tradeaudit.ui.views.strategy_vs_trader_view import StrategyVsTraderView
 from tradeaudit.ui.views.breakdown_view import BreakdownView
 from tradeaudit.ui.views.live_journal_view import LiveJournalView
+from tradeaudit.ui.views.report_view import ReportView
 from tradeaudit.app.exceptions import MT5Error, CredentialStoreError
+
 
 logger = logging.getLogger("tradeaudit.ui.main_window")
 
@@ -200,7 +202,10 @@ class MainWindow(QMainWindow):
         self.live_journal_view = LiveJournalView()
         self.live_journal_view.poll_requested.connect(self._poll_live_positions)
 
-        # Tab 7: Settings View
+        # Tab 7: AI-Ready & Markdown Reports View
+        self.report_view = ReportView()
+
+        # Tab 8: Settings View
         self.settings_view = SettingsView()
         self.settings_view.settings_saved.connect(self._on_settings_saved)
         self.settings_view.connect_requested.connect(self._on_connect_requested)
@@ -212,7 +217,9 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.strategy_vs_trader_view, "⚖️ Strategy vs Trader")
         self.tab_widget.addTab(self.breakdown_view, "🔍 Breakdowns")
         self.tab_widget.addTab(self.live_journal_view, "📝 Live Journal")
+        self.tab_widget.addTab(self.report_view, "📄 AI Reports")
         self.tab_widget.addTab(self.settings_view, "⚙️ MT5 Settings")
+
 
         layout.addWidget(header_card)
         layout.addWidget(self.tab_widget, stretch=1)
@@ -341,15 +348,26 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage("MT5 disconnected.", 4000)
 
     def _refresh_trades(self) -> None:
-        """Fetch stored trades from DB and update TradesView, DashboardView, and StrategyVsTraderView."""
+        """Fetch stored trades from DB and update TradesView, DashboardView, StrategyVsTraderView, BreakdownView, and ReportView."""
         saved_settings = self.settings_repo.load_mt5_settings()
         if saved_settings and saved_settings.login:
             trades = self.trade_repo.get_trades(saved_settings.login)
             last_sync = self.trade_repo.get_last_sync_time(saved_settings.login)
+            strategies = self.strategy_repo.get_all_strategies()
+            account_info = None
+            if self.mt5_service.is_connected():
+                try:
+                    account_info = self.mt5_service.get_account_info()
+                except Exception:
+                    pass
+
             self.trades_view.set_trades(trades, last_sync=last_sync)
             self.dashboard_view.set_trades(trades)
             self.strategy_vs_trader_view.set_trades(trades)
             self.breakdown_view.set_trades(trades)
+            self.report_view.set_strategies(strategies)
+            self.report_view.set_trades(trades, account_info=account_info)
+
 
     def _on_sync_requested(self) -> None:
         """Handle sync history action from TradesView toolbar."""

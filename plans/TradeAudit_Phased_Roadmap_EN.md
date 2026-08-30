@@ -985,14 +985,15 @@ generated_at: ...
 
 ## Definition of Done
 
-- [ ] Markdown export works;
-- [ ] report respects active filters;
-- [ ] report includes all core metrics;
-- [ ] report includes compliance metrics;
-- [ ] report includes behavioral metrics;
-- [ ] report includes known limitations;
-- [ ] report includes AI questions;
-- [ ] report can be uploaded directly to ChatGPT.
+- [x] Markdown export works;
+- [x] report respects active filters;
+- [x] report includes all core metrics;
+- [x] report includes compliance metrics;
+- [x] report includes behavioral metrics;
+- [x] report includes known limitations;
+- [x] report includes AI questions;
+- [x] report can be uploaded directly to ChatGPT.
+
 
 ---
 

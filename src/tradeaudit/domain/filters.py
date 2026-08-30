@@ -46,6 +46,8 @@ class AnalysisFilter:
     direction: DirectionFilter = DirectionFilter.ALL
     symbols: List[str] = field(default_factory=list)
     result: ResultFilter = ResultFilter.ALL
+    strategy_id: Optional[int] = None
+    compliance_status: Optional[str] = None  # None/ALL, COMPLIANT, DEVIATION, PARTIAL, UNCHECKED
 
 
 class FilterEvaluator:
@@ -193,4 +195,17 @@ class FilterEvaluator:
         elif filter_obj.result == ResultFilter.BREAKEVEN:
             filtered = [t for t in filtered if t.net_profit == 0]
 
+        # 5. Strategy Filter
+        if filter_obj.strategy_id is not None:
+            filtered = [t for t in filtered if t.strategy_id == filter_obj.strategy_id]
+
+        # 6. Compliance Status Filter
+        if filter_obj.compliance_status and filter_obj.compliance_status.upper() not in ("ALL", ""):
+            target_status = filter_obj.compliance_status.upper()
+            filtered = [
+                t for t in filtered
+                if (t.compliance_status or "").upper() == target_status
+            ]
+
         return filtered
+

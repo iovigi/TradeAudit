@@ -18,6 +18,11 @@ from tradeaudit.domain.models import (
     UserBehaviorAction,
     BehaviorFlag
 )
+from tradeaudit.domain.report import (
+    ExportType,
+    PrivacyOptions,
+    ReportConfig
+)
 from tradeaudit.domain.analytics import PerformanceMetrics, ProfitabilityVerdict
 from tradeaudit.domain.filters import (
     AnalysisFilter,
@@ -49,6 +54,10 @@ __all__ = [
     "DirectionFilter",
     "ResultFilter",
     "FilterEvaluator",
+    "ExportType",
+    "PrivacyOptions",
+    "ReportConfig",
 ]
+
 
 
