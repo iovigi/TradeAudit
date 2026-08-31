@@ -17,6 +17,7 @@ from tradeaudit.app.services.behavior_analyzer import BehaviorAnalyzer
 from tradeaudit.app.services.behavior_service import BehaviorService
 from tradeaudit.app.services.live_position_watcher import LivePositionWatcherService
 from tradeaudit.app.services.report_generator import MarkdownReportGenerator
+from tradeaudit.app.services.backup_service import BackupService, BackupInfo
 
 __all__ = [
     "RiskCalculator",
@@ -34,6 +35,8 @@ __all__ = [
     "BehaviorService",
     "LivePositionWatcherService",
     "MarkdownReportGenerator",
+    "BackupService",
+    "BackupInfo",
 ]
 
 

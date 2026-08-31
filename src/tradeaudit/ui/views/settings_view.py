@@ -28,6 +28,8 @@ class SettingsView(QWidget):
     settings_saved = Signal(MT5Settings)
     connect_requested = Signal(MT5Settings, str)  # settings, password
     disconnect_requested = Signal()
+    backup_requested = Signal()
+    open_data_folder_requested = Signal()
 
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
@@ -213,9 +215,80 @@ class SettingsView(QWidget):
         actions_layout.addWidget(self.btn_save)
         actions_layout.addStretch()
         actions_layout.addWidget(self.btn_disconnect)
-        actions_layout.addWidget(self.btn_connect)
-
         layout.addLayout(actions_layout)
+
+        # Storage & Backup Management Group Box
+        storage_box = QGroupBox("📦 Storage & Database Backups")
+        storage_box.setStyleSheet("""
+            QGroupBox {
+                font-size: 14px;
+                font-weight: bold;
+                color: #ffffff;
+                border: 1px solid #2a3444;
+                border-radius: 8px;
+                margin-top: 12px;
+                padding-top: 16px;
+                background-color: #1a222d;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 16px;
+                padding: 0 8px;
+                background-color: #1a222d;
+            }
+        """)
+        storage_layout = QVBoxLayout(storage_box)
+        storage_layout.setContentsMargins(20, 20, 20, 20)
+        storage_layout.setSpacing(12)
+
+        self.lbl_storage_info = QLabel("App Data Directory: %LOCALAPPDATA%\\TradeAudit")
+        self.lbl_storage_info.setStyleSheet("color: #94a3b8; font-size: 12px;")
+
+        storage_btn_layout = QHBoxLayout()
+        storage_btn_layout.setSpacing(12)
+
+        self.btn_open_data_dir = QPushButton("📁 Open Data Folder")
+        self.btn_open_data_dir.setStyleSheet("""
+            QPushButton {
+                background-color: #1e293b;
+                color: #94a3b8;
+                border: 1px solid #334155;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #334155;
+                color: #ffffff;
+            }
+        """)
+        self.btn_open_data_dir.clicked.connect(self._on_open_data_dir_clicked)
+
+        self.btn_create_backup = QPushButton("💾 Create Backup Now")
+        self.btn_create_backup.setStyleSheet("""
+            QPushButton {
+                background-color: #1e293b;
+                color: #38bdf8;
+                border: 1px solid #0284c7;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #0369a1;
+                color: #ffffff;
+            }
+        """)
+        self.btn_create_backup.clicked.connect(self._on_create_backup_clicked)
+
+        storage_btn_layout.addWidget(self.btn_open_data_dir)
+        storage_btn_layout.addWidget(self.btn_create_backup)
+        storage_btn_layout.addStretch()
+
+        storage_layout.addWidget(self.lbl_storage_info)
+        storage_layout.addLayout(storage_btn_layout)
+
+        layout.addWidget(storage_box)
 
         # Feedback Panel
         self.feedback_box = QFrame()
@@ -304,6 +377,19 @@ class SettingsView(QWidget):
 
     def clear_feedback(self) -> None:
         self.feedback_box.setVisible(False)
+
+    def set_storage_info(self, data_dir_str: str, db_url_str: str) -> None:
+        """Update storage info text."""
+        self.lbl_storage_info.setText(
+            f"📁 Data Directory: {data_dir_str}\n"
+            f"🗄️ Database: {db_url_str}"
+        )
+
+    def _on_create_backup_clicked(self) -> None:
+        self.backup_requested.emit()
+
+    def _on_open_data_dir_clicked(self) -> None:
+        self.open_data_folder_requested.emit()
 
     def _on_save_clicked(self) -> None:
         settings = self.get_settings()

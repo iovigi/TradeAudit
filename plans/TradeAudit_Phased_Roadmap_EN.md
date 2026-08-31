@@ -1064,14 +1064,14 @@ backups\
 
 ## Definition of Done
 
-- [ ] tests pass before build;
-- [ ] Windows `.exe` runs without Python installed;
-- [ ] MT5 connection works from packaged build;
-- [ ] database persists;
-- [ ] keyring works;
-- [ ] Markdown export works;
-- [ ] logs work;
-- [ ] backups work.
+- [x] tests pass before build;
+- [x] Windows `.exe` runs without Python installed;
+- [x] MT5 connection works from packaged build;
+- [x] database persists;
+- [x] keyring works;
+- [x] Markdown export works;
+- [x] logs work;
+- [x] backups work.
 
 ---
 

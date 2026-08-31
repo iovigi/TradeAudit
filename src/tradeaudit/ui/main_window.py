@@ -5,8 +5,8 @@ Main window PySide6 GUI component for TradeAudit.
 import logging
 from typing import Optional
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QPalette, QColor
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QFont, QPalette, QColor, QIcon, QDesktopServices
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QTabWidget
 )
 
-from tradeaudit.app.config import Settings
+from tradeaudit.app.config import Settings, get_resource_path
 from tradeaudit.domain.models import MT5Settings
 from tradeaudit.infrastructure.database.connection import DatabaseManager
 from tradeaudit.infrastructure.security.credential_store import CredentialStore
@@ -29,6 +29,7 @@ from tradeaudit.infrastructure.repositories.trade_event_repository import TradeE
 from tradeaudit.app.services.sync_service import SyncService
 from tradeaudit.app.services.strategy_service import StrategyService
 from tradeaudit.app.services.live_position_watcher import LivePositionWatcherService
+from tradeaudit.app.services.backup_service import BackupService
 from tradeaudit.infrastructure.mt5.connection_service import MT5ConnectionService, ConnectionState
 from tradeaudit.ui.widgets.connection_status_badge import ConnectionStatusBadge
 from tradeaudit.ui.views.settings_view import SettingsView
@@ -79,10 +80,18 @@ class MainWindow(QMainWindow):
             event_repository=self.trade_event_repo,
             sync_service=self.sync_service
         )
+        self.backup_service = BackupService(settings=self.settings, db_manager=self.db_manager)
 
         self.setWindowTitle(f"{self.settings.app_name} v{self.settings.app_version}")
         self.resize(1100, 750)
         self.setMinimumSize(950, 600)
+
+        # Set Window Icon
+        icon_path = get_resource_path("resources/icons/tradeaudit.ico")
+        if not icon_path.exists():
+            icon_path = get_resource_path("resources/icons/tradeaudit.png")
+        if icon_path.exists():
+            self.setWindowIcon(QIcon(str(icon_path)))
 
         self._apply_dark_theme()
         self._init_ui()
@@ -210,6 +219,8 @@ class MainWindow(QMainWindow):
         self.settings_view.settings_saved.connect(self._on_settings_saved)
         self.settings_view.connect_requested.connect(self._on_connect_requested)
         self.settings_view.disconnect_requested.connect(self._on_disconnect_requested)
+        self.settings_view.backup_requested.connect(self._on_backup_requested)
+        self.settings_view.open_data_folder_requested.connect(self._on_open_data_folder_requested)
 
         self.tab_widget.addTab(self.dashboard_view, "📈 Dashboard")
         self.tab_widget.addTab(self.trades_view, "📊 Trades")
@@ -282,6 +293,26 @@ class MainWindow(QMainWindow):
                 logger.warning("Could not retrieve password for account %s: %s", saved_settings.login, e)
 
         self.settings_view.populate_settings(saved_settings, password)
+        self.settings_view.set_storage_info(str(self.settings.data_dir), self.settings.database_url)
+
+    def _on_backup_requested(self) -> None:
+        """Create an on-demand database backup."""
+        try:
+            backup_path = self.backup_service.create_backup(tag="manual")
+            self.settings_view.show_feedback(f"✅ Backup created successfully:\n{backup_path.name}")
+            self.status_bar.showMessage(f"✅ Database backup saved: {backup_path.name}", 6000)
+        except Exception as e:
+            logger.error("Failed to create database backup: %s", e)
+            self.settings_view.show_feedback(f"❌ Backup failed: {e}", is_error=True)
+            self.status_bar.showMessage("❌ Database backup failed.", 6000)
+
+    def _on_open_data_folder_requested(self) -> None:
+        """Open the application data folder in the system file explorer."""
+        folder = self.settings.data_dir
+        folder.mkdir(parents=True, exist_ok=True)
+        url = QUrl.fromLocalFile(str(folder))
+        QDesktopServices.openUrl(url)
+        self.status_bar.showMessage(f"Opened data folder: {folder}", 4000)
 
     def _on_settings_saved(self, settings: MT5Settings) -> None:
         """Handle save settings request from SettingsView."""
