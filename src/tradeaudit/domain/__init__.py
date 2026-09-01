@@ -23,7 +23,19 @@ from tradeaudit.domain.report import (
     PrivacyOptions,
     ReportConfig
 )
-from tradeaudit.domain.analytics import PerformanceMetrics, ProfitabilityVerdict
+from tradeaudit.domain.analytics import (
+    PerformanceMetrics,
+    ProfitabilityVerdict,
+    FourQuadrantCounts,
+    StrategyVsTraderComparison,
+    MonteCarloResult,
+    RuinRiskLevel,
+    RiskOfRuinAnalysis,
+    RollingMetricPoint,
+    RollingAnalyticsResult,
+    BootstrapConfidenceIntervals,
+    QuantResearchResult
+)
 from tradeaudit.domain.filters import (
     AnalysisFilter,
     PeriodPreset,
@@ -49,6 +61,15 @@ __all__ = [
     "BehaviorFlag",
     "PerformanceMetrics",
     "ProfitabilityVerdict",
+    "FourQuadrantCounts",
+    "StrategyVsTraderComparison",
+    "MonteCarloResult",
+    "RuinRiskLevel",
+    "RiskOfRuinAnalysis",
+    "RollingMetricPoint",
+    "RollingAnalyticsResult",
+    "BootstrapConfidenceIntervals",
+    "QuantResearchResult",
     "AnalysisFilter",
     "PeriodPreset",
     "DirectionFilter",

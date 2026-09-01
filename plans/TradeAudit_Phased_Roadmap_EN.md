@@ -1102,11 +1102,11 @@ Last 100 Trades Expectancy
 
 ## Definition of Done
 
-- [ ] rolling metrics exist;
-- [ ] Monte Carlo simulation works;
-- [ ] Risk of Ruin is available;
-- [ ] confidence warnings are clear;
-- [ ] advanced analytics do not alter raw trade data.
+- [x] rolling metrics exist;
+- [x] Monte Carlo simulation works;
+- [x] Risk of Ruin is available;
+- [x] confidence warnings are clear;
+- [x] advanced analytics do not alter raw trade data.
 
 ---
 
