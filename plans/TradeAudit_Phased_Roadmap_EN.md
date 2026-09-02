@@ -65,12 +65,12 @@ tests
 
 ## Definition of Done
 
-- [ ] application starts successfully;
-- [ ] main window opens;
-- [ ] database initializes;
-- [ ] logs are written;
-- [ ] tests run successfully;
-- [ ] project structure is stable.
+- [x] application starts successfully;
+- [x] main window opens;
+- [x] database initializes;
+- [x] logs are written;
+- [x] tests run successfully;
+- [x] project structure is stable.
 
 ---
 
@@ -139,13 +139,13 @@ Account Info
 
 ## Definition of Done
 
-- [ ] user can select `terminal64.exe`;
-- [ ] login and server can be saved;
-- [ ] password is stored securely;
-- [ ] app connects to MT5;
-- [ ] connection errors are displayed;
-- [ ] account balance/equity/currency are shown;
-- [ ] password never appears in logs.
+- [x] user can select `terminal64.exe`;
+- [x] login and server can be saved;
+- [x] password is stored securely;
+- [x] app connects to MT5;
+- [x] connection errors are displayed;
+- [x] account balance/equity/currency are shown;
+- [x] password never appears in logs.
 
 ---
 
