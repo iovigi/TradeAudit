@@ -51,3 +51,19 @@ Run unit test suite using `pytest`:
 ```bash
 pytest
 ```
+
+## Building Windows Executable and Installer
+
+### 1. Build Standalone Executable
+To package TradeAudit into a standalone Windows folder build (`dist/TradeAudit/TradeAudit.exe`):
+```powershell
+.\scripts\build_exe.ps1
+```
+
+### 2. Build Release Package and Setup Installer
+To run tests, build the PyInstaller executable, create a portable `.zip` archive, and compile the Windows Setup installer (`TradeAudit-Setup-vX.X.X.exe` via Inno Setup):
+```powershell
+.\scripts\build_installer.ps1
+```
+or run `scripts\build_installer.bat`.
+
