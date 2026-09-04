@@ -1110,6 +1110,35 @@ Last 100 Trades Expectancy
 
 ---
 
+# Phase 14 — Interactive Candlestick Chart Visualizer & Trade Execution Replay
+
+## Goal
+
+Provide high-resolution visual reconstruction of every trade on historical candlestick charts with execution overlays (Entry, Stop-Loss modifications, Take-Profit, and exits) plus a bar-by-bar trade replay player.
+
+## Scope
+
+- OHLCV candlestick domain models (`Candle`, `TimeFrame`);
+- MT5 historical rate fetching via `MT5CandleReader` with deterministic fallback generator;
+- Trade execution overlays (`TradeExecutionOverlay`) incorporating SL/TP modifications from Phase 10;
+- Interactive Candlestick Chart widget (`CandlestickChartWidget`) with zooming, panning, and hover crosshairs;
+- Multi-timeframe support: M1, M5, M15, M30, H1, H4, D1;
+- Modal dialog (`TradeChartDialog`) and integrated Tab View (`TradeChartView`);
+- Step-by-step Trade Replay engine with playback speeds (0.5x, 1x, 2x, 4x);
+- Direct access via "View Chart" button and double-click from Trades table.
+
+## Definition of Done
+
+- [x] Candlestick domain models and timeframe properties implemented;
+- [x] MT5 candlestick rates reader implemented with synthetic generator;
+- [x] Stop Loss / Take Profit lifecycle modifications tracked on chart;
+- [x] Interactive Candlestick Chart widget with custom drawing and crosshairs;
+- [x] Trade Replay engine and slider player functional;
+- [x] Integrated into Trades table and dedicated Trade Chart tab;
+- [x] 100% unit test pass rate across all modules.
+
+---
+
 # Recommended Release Milestones
 
 ## Milestone A — Technical Prototype

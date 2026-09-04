@@ -187,6 +187,7 @@ class TradesView(QWidget):
     """View container for displaying aggregated MT5 trade history."""
 
     sync_requested = Signal()
+    chart_requested = Signal(object)  # Emits selected Trade instance
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -227,6 +228,21 @@ class TradesView(QWidget):
         """)
         self.btn_sync.clicked.connect(self.sync_requested.emit)
 
+        self.btn_view_chart = QPushButton("📈 View Chart & Replay")
+        self.btn_view_chart.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self.btn_view_chart.setStyleSheet("""
+            QPushButton {
+                background-color: #238636;
+                color: #ffffff;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 14px;
+            }
+            QPushButton:hover { background-color: #2ea043; }
+            QPushButton:pressed { background-color: #1a6f2c; }
+        """)
+        self.btn_view_chart.clicked.connect(self._on_view_chart_clicked)
+
         self.lbl_sync_status = QLabel("Last Sync: Never")
         self.lbl_sync_status.setStyleSheet("color: #8b9bb4; font-size: 12px; margin-left: 10px;")
 
@@ -259,6 +275,7 @@ class TradesView(QWidget):
         self.cmb_filter_status.currentTextChanged.connect(self._apply_filters)
 
         toolbar_layout.addWidget(self.btn_sync)
+        toolbar_layout.addWidget(self.btn_view_chart)
         toolbar_layout.addWidget(self.lbl_sync_status)
         toolbar_layout.addStretch()
         toolbar_layout.addWidget(QLabel("Filter:"))
@@ -300,6 +317,7 @@ class TradesView(QWidget):
         self.table_trades.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table_trades.horizontalHeader().setStretchLastSection(True)
         self.table_trades.selectionModel().selectionChanged.connect(self._on_trade_selected)
+        self.table_trades.doubleClicked.connect(self._on_table_double_clicked)
 
         # Deals Breakdown Section
         deals_container = QWidget()
@@ -341,6 +359,24 @@ class TradesView(QWidget):
 
         layout.addWidget(toolbar_card)
         layout.addWidget(splitter, stretch=1)
+
+    def _on_table_double_clicked(self, index: QModelIndex) -> None:
+        """Double clicking a trade row opens its chart visualizer."""
+        if not index.isValid():
+            return
+        trade = self.model.get_trade(index.row())
+        if trade:
+            self.chart_requested.emit(trade)
+
+    def _on_view_chart_clicked(self) -> None:
+        """Open chart for currently selected trade."""
+        selected_indexes = self.table_trades.selectionModel().selectedRows()
+        if selected_indexes:
+            trade = self.model.get_trade(selected_indexes[0].row())
+            if trade:
+                self.chart_requested.emit(trade)
+        elif self._all_trades:
+            self.chart_requested.emit(self._all_trades[0])
 
     def set_trades(self, trades: List[Trade], last_sync: Optional[datetime] = None) -> None:
         """Populate trades dataset into view."""

@@ -30,6 +30,8 @@ from tradeaudit.app.services.sync_service import SyncService
 from tradeaudit.app.services.strategy_service import StrategyService
 from tradeaudit.app.services.live_position_watcher import LivePositionWatcherService
 from tradeaudit.app.services.backup_service import BackupService
+from tradeaudit.app.services.trade_chart_service import TradeChartService
+from tradeaudit.infrastructure.mt5.candle_reader import MT5CandleReader
 from tradeaudit.infrastructure.mt5.connection_service import MT5ConnectionService, ConnectionState
 from tradeaudit.ui.widgets.connection_status_badge import ConnectionStatusBadge
 from tradeaudit.ui.views.settings_view import SettingsView
@@ -41,6 +43,8 @@ from tradeaudit.ui.views.breakdown_view import BreakdownView
 from tradeaudit.ui.views.live_journal_view import LiveJournalView
 from tradeaudit.ui.views.report_view import ReportView
 from tradeaudit.ui.views.quant_research_view import QuantResearchView
+from tradeaudit.ui.views.trade_chart_view import TradeChartView
+from tradeaudit.ui.dialogs.trade_chart_dialog import TradeChartDialog
 from tradeaudit.app.exceptions import MT5Error, CredentialStoreError
 
 
@@ -82,6 +86,11 @@ class MainWindow(QMainWindow):
             sync_service=self.sync_service
         )
         self.backup_service = BackupService(settings=self.settings, db_manager=self.db_manager)
+        self.candle_reader = MT5CandleReader(connection_service=self.mt5_service)
+        self.trade_chart_service = TradeChartService(
+            candle_reader=self.candle_reader,
+            trade_event_repository=self.trade_event_repo
+        )
 
         self.setWindowTitle(f"{self.settings.app_name} v{self.settings.app_version}")
         self.resize(1100, 750)
@@ -197,6 +206,7 @@ class MainWindow(QMainWindow):
         # Tab 2: Trades View
         self.trades_view = TradesView()
         self.trades_view.sync_requested.connect(self._on_sync_requested)
+        self.trades_view.chart_requested.connect(self._open_trade_chart)
 
         # Tab 3: Strategy Management View
         self.strategy_view = StrategyView(strategy_service=self.strategy_service)
@@ -218,7 +228,10 @@ class MainWindow(QMainWindow):
         # Tab 8: Quantitative Risk & Statistical Research View
         self.quant_view = QuantResearchView()
 
-        # Tab 9: Settings View
+        # Tab 9: Interactive Candlestick Trade Chart & Replay View
+        self.trade_chart_view = TradeChartView(chart_service=self.trade_chart_service)
+
+        # Tab 10: Settings View
         self.settings_view = SettingsView()
         self.settings_view.settings_saved.connect(self._on_settings_saved)
         self.settings_view.connect_requested.connect(self._on_connect_requested)
@@ -234,6 +247,7 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.live_journal_view, "📝 Live Journal")
         self.tab_widget.addTab(self.report_view, "📄 AI Reports")
         self.tab_widget.addTab(self.quant_view, "🔬 Quant & Risk")
+        self.tab_widget.addTab(self.trade_chart_view, "🕯️ Trade Chart")
         self.tab_widget.addTab(self.settings_view, "⚙️ MT5 Settings")
 
 
@@ -404,6 +418,29 @@ class MainWindow(QMainWindow):
             self.report_view.set_strategies(strategies)
             self.report_view.set_trades(trades, account_info=account_info)
             self.quant_view.set_trades(trades)
+            self.trade_chart_view.set_trades(trades)
+
+    def _open_trade_chart(self, trade) -> None:
+        """Open TradeChartDialog popup and update the TradeChart tab."""
+        saved_settings = self.settings_repo.load_mt5_settings()
+        all_trades = self.trade_repo.get_trades(saved_settings.login) if saved_settings and saved_settings.login else [trade]
+        
+        idx = 0
+        for i, t in enumerate(all_trades):
+            if t.position_id == trade.position_id:
+                idx = i
+                break
+
+        self.trade_chart_view.show_trade_by_position_id(trade.position_id)
+        
+        # Open modal inspection dialog
+        dialog = TradeChartDialog(
+            trades=all_trades,
+            initial_trade_index=idx,
+            chart_service=self.trade_chart_service,
+            parent=self
+        )
+        dialog.exec()
 
 
     def _on_sync_requested(self) -> None:
