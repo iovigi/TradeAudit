@@ -114,6 +114,8 @@ class TradeModel(Base):
     sl_history = relationship("SLHistoryModel", back_populates="trade", cascade="all, delete-orphan")
     tp_history = relationship("TPHistoryModel", back_populates="trade", cascade="all, delete-orphan")
     events = relationship("TradeEventModel", back_populates="trade", cascade="all, delete-orphan")
+    annotations = relationship("ChartAnnotationModel", back_populates="trade", cascade="all, delete-orphan")
+    journal_note = relationship("TradeJournalNoteModel", back_populates="trade", uselist=False, cascade="all, delete-orphan")
 
 
 class TradeDealModel(Base):
@@ -195,5 +197,46 @@ class TradeEventModel(Base):
     details = Column(Text, nullable=True)
 
     trade = relationship("TradeModel", back_populates="events")
+
+
+class ChartAnnotationModel(Base):
+    """Database representation of candlestick chart user annotations."""
+    __tablename__ = "chart_annotations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    trade_id = Column(Integer, ForeignKey("trades.id", ondelete="CASCADE"), nullable=True, index=True)
+    timeframe = Column(String(10), default="M15", nullable=False, index=True)
+    annotation_type = Column(String(50), nullable=False)
+    p1_time = Column(DateTime, nullable=True)
+    p1_price = Column(Float, nullable=False, default=0.0)
+    p2_time = Column(DateTime, nullable=True)
+    p2_price = Column(Float, nullable=False, default=0.0)
+    color = Column(String(20), default="#58a6ff", nullable=False)
+    line_width = Column(Integer, default=2, nullable=False)
+    text = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    trade = relationship("TradeModel", back_populates="annotations")
+
+
+class TradeJournalNoteModel(Base):
+    """Database representation of rich trade notes, pre/post thesis, checklists, and screenshots."""
+    __tablename__ = "trade_journal_notes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    trade_id = Column(Integer, ForeignKey("trades.id", ondelete="CASCADE"), unique=True, nullable=False, index=True)
+    setup_name = Column(String(100), default="", nullable=False)
+    rating = Column(String(10), default="A", nullable=False)
+    pre_trade_thesis = Column(Text, nullable=True)
+    post_trade_review = Column(Text, nullable=True)
+    lessons_learned = Column(Text, nullable=True)
+    mistakes_json = Column(Text, nullable=True)     # JSON array of string tags
+    checklist_json = Column(Text, nullable=True)    # JSON object of {criterion: bool}
+    screenshots_json = Column(Text, nullable=True)  # JSON array of screenshot file paths
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
+    trade = relationship("TradeModel", back_populates="journal_note")
+
 
 

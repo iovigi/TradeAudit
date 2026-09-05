@@ -109,6 +109,10 @@ if HAS_PYDANTIC:
         def config_dir(self) -> Path:
             return self.data_dir / "config"
 
+        @property
+        def screenshots_dir(self) -> Path:
+            return self.data_dir / "screenshots"
+
         def ensure_directories(self) -> None:
             """Ensure all application data subdirectories exist."""
             for directory in (
@@ -118,6 +122,7 @@ if HAS_PYDANTIC:
                 self.export_dir,
                 self.backup_dir,
                 self.config_dir,
+                self.screenshots_dir,
             ):
                 directory.mkdir(parents=True, exist_ok=True)
 
@@ -164,6 +169,10 @@ else:
         def config_dir(self) -> Path:
             return self.data_dir / "config"
 
+        @property
+        def screenshots_dir(self) -> Path:
+            return self.data_dir / "screenshots"
+
         def ensure_directories(self) -> None:
             """Ensure all application data subdirectories exist."""
             for directory in (
@@ -173,6 +182,7 @@ else:
                 self.export_dir,
                 self.backup_dir,
                 self.config_dir,
+                self.screenshots_dir,
             ):
                 directory.mkdir(parents=True, exist_ok=True)
 

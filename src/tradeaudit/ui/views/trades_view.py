@@ -187,7 +187,8 @@ class TradesView(QWidget):
     """View container for displaying aggregated MT5 trade history."""
 
     sync_requested = Signal()
-    chart_requested = Signal(object)  # Emits selected Trade instance
+    chart_requested = Signal(object)    # Emits selected Trade instance
+    journal_requested = Signal(object)  # Emits selected Trade instance for journal review
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -243,6 +244,21 @@ class TradesView(QWidget):
         """)
         self.btn_view_chart.clicked.connect(self._on_view_chart_clicked)
 
+        self.btn_journal = QPushButton("📝 Journal Note")
+        self.btn_journal.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self.btn_journal.setStyleSheet("""
+            QPushButton {
+                background-color: #1f6feb;
+                color: #ffffff;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 14px;
+            }
+            QPushButton:hover { background-color: #388bfd; }
+            QPushButton:pressed { background-color: #0d419d; }
+        """)
+        self.btn_journal.clicked.connect(self._on_journal_clicked)
+
         self.lbl_sync_status = QLabel("Last Sync: Never")
         self.lbl_sync_status.setStyleSheet("color: #8b9bb4; font-size: 12px; margin-left: 10px;")
 
@@ -276,6 +292,7 @@ class TradesView(QWidget):
 
         toolbar_layout.addWidget(self.btn_sync)
         toolbar_layout.addWidget(self.btn_view_chart)
+        toolbar_layout.addWidget(self.btn_journal)
         toolbar_layout.addWidget(self.lbl_sync_status)
         toolbar_layout.addStretch()
         toolbar_layout.addWidget(QLabel("Filter:"))
@@ -377,6 +394,16 @@ class TradesView(QWidget):
                 self.chart_requested.emit(trade)
         elif self._all_trades:
             self.chart_requested.emit(self._all_trades[0])
+
+    def _on_journal_clicked(self) -> None:
+        """Open journal review note for currently selected trade."""
+        selected_indexes = self.table_trades.selectionModel().selectedRows()
+        if selected_indexes:
+            trade = self.model.get_trade(selected_indexes[0].row())
+            if trade:
+                self.journal_requested.emit(trade)
+        elif self._all_trades:
+            self.journal_requested.emit(self._all_trades[0])
 
     def set_trades(self, trades: List[Trade], last_sync: Optional[datetime] = None) -> None:
         """Populate trades dataset into view."""

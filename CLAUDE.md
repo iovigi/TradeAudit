@@ -175,3 +175,4 @@ pytest tests/unit/test_trade_chart_service.py
 - **Phase 12:** Production Windows EXE Packaging & Inno Setup Pipeline
 - **Phase 13:** Quantitative Research (Monte Carlo, Risk of Ruin, Rolling Metrics)
 - **Phase 14:** Interactive Candlestick Chart Visualizer & Bar-by-Bar Trade Replay
+- **Phase 15:** Chart Annotation Drawing Tools, 1-Click Screenshots & Trade Notes Review Studio

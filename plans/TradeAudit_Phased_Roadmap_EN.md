@@ -1139,6 +1139,34 @@ Provide high-resolution visual reconstruction of every trade on historical candl
 
 ---
 
+# Phase 15 — Chart Annotation Drawing Tools, 1-Click Screenshots & Trade Notes Studio
+
+## Goal
+
+Provide interactive chart annotation capabilities (trendlines, horizontal rays, support/resistance zones, arrows, text notes), 1-click HD screenshot export with clipboard sharing, and a comprehensive Trade Journal Review Studio (setup validation checklists, execution grading, and mistakes identification).
+
+## Scope
+
+- **Annotation Models & Enums:** `ChartAnnotation`, `AnnotationType`, `TradeJournalNote`, `TradeGrade`;
+- **Database Persistence:** `ChartAnnotationModel` (`chart_annotations`) and `TradeJournalNoteModel` (`trade_journal_notes`) in SQLite;
+- **Repositories & Services:** `AnnotationRepository`, `TradeNoteRepository`, `TradeJournalService`, `ChartScreenshotService`;
+- **Interactive Drawing Studio:** 2-point drag & ray drawing on `CandlestickChartWidget` with price/time coordinate transforms (zoom & pan proof);
+- **Drawing Toolbar:** `ChartDrawingToolbar` with quick tools (Pan, Trendline, Ray, Zone Box, Note, Arrows, Eraser, Clear) and color palette;
+- **1-Click Screenshot Capture:** Saves PNG snapshots to `%LOCALAPPDATA%/TradeAudit/screenshots/` and copies directly to system clipboard;
+- **Trade Journal Review Dialog:** `TradeJournalDialog` with pre-trade thesis, post-trade review, execution grading, setup checklists with completion %, mistake tags, and attached screenshot galleries;
+- **Trades View & Dialog Integration:** Direct 1-click access from Trades table, Chart Dialog, and Chart View.
+
+## Definition of Done
+
+- [x] Drawing tools (Trendline, Ray, Zone, Text Note, Arrows, Eraser, Clear) functional on Candlestick Chart;
+- [x] Annotations stay anchored to Price & Time during zooming and panning;
+- [x] Annotation entities persist per trade & timeframe in SQLite database;
+- [x] HD screenshots captured to disk and clipboard;
+- [x] Trade Journal Dialog with grading (A+, A, B, C, D, F) and setup checklists functional;
+- [x] 100% automated test pass rate across all test modules (164/164 tests).
+
+---
+
 # Recommended Release Milestones
 
 ## Milestone A — Technical Prototype

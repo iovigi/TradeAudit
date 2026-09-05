@@ -54,20 +54,25 @@ TradeAudit answers all four quantitatively and automatically.
 - **Execution Overlays:** Visual markers for entry price, initial Stop Loss, Take Profit, trailing SL adjustment steps, and final exits.
 - **Trade Replay Engine:** Step-by-step bar replay player with speed control (0.5x, 1x, 2x, 4x) to re-live execution dynamics.
 
-### 📝 6. Live Trade Journal & Modification Tracking
+### 🎨 6. Chart Annotations, 1-Click Screenshots & Trade Review Studio
+- **Interactive Drawing Studio:** Draw trendlines, horizontal rays, support/resistance rectangle zones, text notes, and directional arrows anchored to price and timestamp (zoom and pan without distortion).
+- **1-Click Screenshot Capture & Clipboard:** High-resolution chart snapshots saved directly to `%LOCALAPPDATA%/TradeAudit/screenshots/` and copied to clipboard.
+- **Trade Review & Setup Checklists:** Pre-trade thesis, post-trade review, execution grading (A+, A, B, C, D, F), mistake taxonomy, and attached screenshot galleries.
+
+### 📝 7. Live Trade Journal & Modification Tracking
 - Real-time MT5 position polling that captures initial Stop-Loss and Take-Profit snapshots at the moment of order placement.
 - Audit trail logging every mid-trade Stop-Loss and Take-Profit modification.
 
-### 🔬 7. Quantitative Risk Research & Simulation
+### 🔬 8. Quantitative Risk Research & Simulation
 - **Monte Carlo Simulation:** 1,000+ iteration trade sequence reshuffling to discover worst-case drawdown distributions and 5th/50th/95th percentile equity curves.
 - **Risk of Ruin Calculation:** Quantitative probability of experiencing 20%, 30%, or 50% drawdowns based on your empirical edge.
 - **Rolling Metrics & Bootstrap Confidence Intervals:** Rolling 20/50/100-trade expectancy curves to measure edge degradation over time.
 
-### 📄 8. Markdown & AI-Ready Reporting
+### 📄 9. Markdown & AI-Ready Reporting
 - Export comprehensive audit dossiers ready for ChatGPT analysis with structured performance metrics, deviation breakdowns, and tailored diagnostic prompts.
 - Built-in privacy controls: One-click account number and broker masking.
 
-### 🔒 9. Security, Backups & Portability
+### 🔒 10. Security, Backups & Portability
 - Passwords stored securely in the **Windows Credential Locker** using the Python `keyring` API (passwords are never logged or stored in plaintext).
 - Automated SQLite database snapshot backups with one-click restore.
 

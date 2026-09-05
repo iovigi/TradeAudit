@@ -26,11 +26,15 @@ from tradeaudit.infrastructure.repositories.settings_repository import SettingsR
 from tradeaudit.infrastructure.repositories.trade_repository import TradeRepository
 from tradeaudit.infrastructure.repositories.strategy_repository import StrategyRepository
 from tradeaudit.infrastructure.repositories.trade_event_repository import TradeEventRepository
+from tradeaudit.infrastructure.repositories.annotation_repository import AnnotationRepository
+from tradeaudit.infrastructure.repositories.trade_note_repository import TradeNoteRepository
 from tradeaudit.app.services.sync_service import SyncService
 from tradeaudit.app.services.strategy_service import StrategyService
 from tradeaudit.app.services.live_position_watcher import LivePositionWatcherService
 from tradeaudit.app.services.backup_service import BackupService
 from tradeaudit.app.services.trade_chart_service import TradeChartService
+from tradeaudit.app.services.chart_screenshot_service import ChartScreenshotService
+from tradeaudit.app.services.trade_journal_service import TradeJournalService
 from tradeaudit.infrastructure.mt5.candle_reader import MT5CandleReader
 from tradeaudit.infrastructure.mt5.connection_service import MT5ConnectionService, ConnectionState
 from tradeaudit.ui.widgets.connection_status_badge import ConnectionStatusBadge
@@ -45,6 +49,7 @@ from tradeaudit.ui.views.report_view import ReportView
 from tradeaudit.ui.views.quant_research_view import QuantResearchView
 from tradeaudit.ui.views.trade_chart_view import TradeChartView
 from tradeaudit.ui.dialogs.trade_chart_dialog import TradeChartDialog
+from tradeaudit.ui.dialogs.trade_journal_dialog import TradeJournalDialog
 from tradeaudit.app.exceptions import MT5Error, CredentialStoreError
 
 
@@ -79,6 +84,8 @@ class MainWindow(QMainWindow):
         self.trade_repo = trade_repo or TradeRepository(self.db_manager)
         self.strategy_repo = strategy_repo or StrategyRepository(self.db_manager)
         self.trade_event_repo = trade_event_repo or TradeEventRepository(self.db_manager)
+        self.annotation_repo = AnnotationRepository(self.db_manager)
+        self.trade_note_repo = TradeNoteRepository(self.db_manager)
         self.strategy_service = strategy_service or StrategyService(self.strategy_repo, self.trade_repo)
         self.sync_service = sync_service or SyncService(trade_repo=self.trade_repo)
         self.live_watcher_service = live_watcher_service or LivePositionWatcherService(
@@ -86,6 +93,11 @@ class MainWindow(QMainWindow):
             sync_service=self.sync_service
         )
         self.backup_service = BackupService(settings=self.settings, db_manager=self.db_manager)
+        self.screenshot_service = ChartScreenshotService(target_dir=self.settings.screenshots_dir)
+        self.journal_service = TradeJournalService(
+            trade_note_repo=self.trade_note_repo,
+            annotation_repo=self.annotation_repo
+        )
         self.candle_reader = MT5CandleReader(connection_service=self.mt5_service)
         self.trade_chart_service = TradeChartService(
             candle_reader=self.candle_reader,
@@ -207,6 +219,7 @@ class MainWindow(QMainWindow):
         self.trades_view = TradesView()
         self.trades_view.sync_requested.connect(self._on_sync_requested)
         self.trades_view.chart_requested.connect(self._open_trade_chart)
+        self.trades_view.journal_requested.connect(self._open_trade_journal)
 
         # Tab 3: Strategy Management View
         self.strategy_view = StrategyView(strategy_service=self.strategy_service)
@@ -229,7 +242,11 @@ class MainWindow(QMainWindow):
         self.quant_view = QuantResearchView()
 
         # Tab 9: Interactive Candlestick Trade Chart & Replay View
-        self.trade_chart_view = TradeChartView(chart_service=self.trade_chart_service)
+        self.trade_chart_view = TradeChartView(
+            chart_service=self.trade_chart_service,
+            screenshot_service=self.screenshot_service,
+            journal_service=self.journal_service
+        )
 
         # Tab 10: Settings View
         self.settings_view = SettingsView()
@@ -438,6 +455,17 @@ class MainWindow(QMainWindow):
             trades=all_trades,
             initial_trade_index=idx,
             chart_service=self.trade_chart_service,
+            screenshot_service=self.screenshot_service,
+            journal_service=self.journal_service,
+            parent=self
+        )
+        dialog.exec()
+
+    def _open_trade_journal(self, trade) -> None:
+        """Open TradeJournalDialog modal review window for the selected trade."""
+        dialog = TradeJournalDialog(
+            trade=trade,
+            journal_service=self.journal_service,
             parent=self
         )
         dialog.exec()
